@@ -1,5 +1,7 @@
 #include "lexer.h"
+#include "ds/array.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -26,7 +28,7 @@ Token make_error_token(const char *error)
     return out;
 }
 
-Token build_token(Lexer *lexer, TOKEN_TYPE type)
+Token lexer_build_token(Lexer *lexer, TOKEN_TYPE type)
 {
     int token_len = lexer->off - lexer->start;
 
@@ -68,6 +70,21 @@ void token_to_string(Token token, char *buffer)
 
     sprintf(buffer, "%s(value: %s, %d:%d)", 
     TK_STRING_TABLE[token.type], token.str_value, token.line, token.column);
+}
+
+void token_fmt_str(Array *array, Token token)
+{
+    int tk_len = token_get_string_size(token);
+
+    // extra len for the format characters to create a string such as TokenName(value: token_string, line:column)
+    tk_len += 10;
+
+    if (array->len < tk_len)
+    {
+        array_resize(array, tk_len);
+    }
+
+    token_to_string(token, array->data);
 }
 
 bool lexer_at_end(Lexer *lexer)
@@ -172,6 +189,37 @@ while_end:
     lexer->start = lexer->off;
 }
 
+Token lexer_build_if_match(Lexer *lexer, char c, TOKEN_TYPE if_match, TOKEN_TYPE default_token)
+{
+    if (lexer_match_next(lexer, c))
+    {
+        return lexer_build_token(lexer, if_match);
+    }
+    return lexer_build_token(lexer, default_token);
+}
+
+Token lexer_build_digit(Lexer *lexer)
+{
+    char c = lexer_peak(lexer);
+    bool is_float = false;
+
+scan_digits:
+
+    while (!lexer_at_end(lexer) && isdigit(lexer_peak(lexer)))
+    {
+        c = lexer_advance(lexer);
+    }
+
+    if (lexer_peak(lexer) == '.')
+    {
+        is_float = true;
+        lexer_advance(lexer);
+        goto scan_digits;
+    }
+
+    return lexer_build_token(lexer, is_float ? TK_FLOAT : TK_INT);
+}
+
 Token advance_token(Lexer *lexer)
 {
     if (lexer == NULL || lexer->src == NULL)
@@ -185,22 +233,14 @@ Token advance_token(Lexer *lexer)
 
     switch (c)
     {
-        case '+': return build_token(lexer, TK_PLUS);
-        case '-': return build_token(lexer, TK_MINUS);
-        case '*': return build_token(lexer, TK_STAR);
-        case '/': return build_token(lexer, TK_FORWARD_SLASH);
-        case ':': 
-        {
-            // TODO: handle indent validation
-            if (lexer_match_next(lexer, '='))
-            {
-                return build_token(lexer, TK_COLON_EQUAL);
-            }
-            return build_token(lexer, TK_COLON);
-        }
-        case '=': return build_token(lexer, TK_EQUAL);
-        case '(': return build_token(lexer, TK_LEFT_BRACKET);
-        case ')': return build_token(lexer, TK_RIGHT_BRACKET);
+        case '+': return lexer_build_token(lexer, TK_PLUS);
+        case '-': return lexer_build_token(lexer, TK_MINUS);
+        case '*': return lexer_build_token(lexer, TK_STAR);
+        case '/': return lexer_build_token(lexer, TK_FORWARD_SLASH);
+        case ':': return lexer_build_if_match(lexer, '=', TK_COLON_EQUAL, TK_COLON);
+        case '=': return lexer_build_token(lexer, TK_EQUAL);
+        case '(': return lexer_build_token(lexer, TK_LEFT_BRACKET);
+        case ')': return lexer_build_token(lexer, TK_RIGHT_BRACKET);
         case '\0':
         {
             Token eof =
@@ -212,6 +252,13 @@ Token advance_token(Lexer *lexer)
             };
 
             return eof;
+        }
+        default:
+        {
+            if (isdigit(c))
+            {
+                return lexer_build_digit(lexer);
+            }
         }
     }
 

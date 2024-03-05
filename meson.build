@@ -1,5 +1,7 @@
 project('prog', 'c')
 
+incdir = include_directories('src/')
+
 executable('prog', [
     'src/main.c',
     'src/frontend/lexer.h',
@@ -8,4 +10,4 @@ executable('prog', [
     'src/ds/array.c',
     'src/util/io.h',
     'src/util/io.c'
-    ])
+    ], include_directories : incdir)

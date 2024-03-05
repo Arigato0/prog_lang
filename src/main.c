@@ -17,7 +17,7 @@ int main()
 
     if (src == NULL)
     {
-        fprintf(stderr, "Could not read source file\n");
+        fprintf(stderr, "could not read source file\n");
         return -1;
     }
 
@@ -30,18 +30,15 @@ int main()
     {
         token = advance_token(&lexer);
 
-        int tk_len = token_get_string_size(token);
+        Array token_str;
 
-        // extra len for the format characters to create a string such as TokenName(value: token_string, line:column)
-        tk_len += 10;
+        array_new(&token_str, 1);
 
-        char *token_string_buff = malloc(tk_len+1);
+        token_fmt_str(&token_str, token);
 
-        token_to_string(token, token_string_buff);
+        printf("%s\n", token_str.data);
 
-        printf("%s\n", token_string_buff);
-
-        free(token_string_buff);
+        array_free(&token_str);
 
     } while (token.type != TK_EOF);
 
