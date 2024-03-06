@@ -55,6 +55,6 @@ void token_to_string(Token token, char *buffer);
 
 void token_fmt_str(Array *array, Token token);
 
-void new_lexer(Lexer *lexer);
+void lexer_new(Lexer *lexer);
 
 Token advance_token(Lexer *lexer);

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-void new_lexer(Lexer *lexer)
+void lexer_new(Lexer *lexer)
 {
     memset(lexer, 0, sizeof(Lexer));
 
@@ -124,13 +124,14 @@ char lexer_advance(Lexer *lexer)
     return lexer->src[lexer->off++];
 }
 
-bool lexer_is_blank(Lexer *lexer, char c)
+bool is_blank(char c)
 {
     return 
        c == ' ' 
-    || c == 't' 
+    || c == '\t' 
     || c == '\r' 
-    || c == '\n';
+    || c == '\n'
+    || c == '\0';
 }
 
 bool lexer_match_next(Lexer *lexer, char c)
@@ -210,11 +211,18 @@ scan_digits:
         c = lexer_advance(lexer);
     }
 
+    c = lexer_peak(lexer);
+
     if (lexer_peak(lexer) == '.')
     {
         is_float = true;
         lexer_advance(lexer);
         goto scan_digits;
+    }
+    // TODO: handle integral suffixes here IE: 5f should become a float
+    else if (!is_blank(c))
+    {
+        return make_error_token("Unexpected character found while lexing digit");
     }
 
     return lexer_build_token(lexer, is_float ? TK_FLOAT : TK_INT);

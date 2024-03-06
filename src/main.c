@@ -1,4 +1,5 @@
 #include "ds/array.h"
+#include "ds/trie.h"
 #include "frontend/lexer.h"
 #include "util/io.h"
 #include <stddef.h>
@@ -7,41 +8,65 @@
 
 int main()
 {
-    Lexer lexer;
-
-    new_lexer(&lexer);
-
-    int src_len; 
-
-    char *src = read_file("tokens.prog", &src_len);
-
-    if (src == NULL)
+    Keyword keywords[] =
     {
-        fprintf(stderr, "could not read source file\n");
+        {"func", TK_FUNC},
+        {"if", TK_IF},
+    };
+
+    TrieNode *root = trie_new_node();
+
+    trie_set(root, keywords, sizeof(keywords) / sizeof(Keyword));
+
+    TOKEN_TYPE tk_type = trie_match(root, "if");
+
+    if (tk_type == 0)
+    {
+        printf("could not match\n");
         return -1;
     }
 
-    lexer.src = src;
-    lexer.src_len = src_len;
+    printf("%s\n", TK_STRING_TABLE[tk_type]);
 
-    Token token;
+    trie_free(root);
 
-    do 
-    {
-        token = advance_token(&lexer);
+    // Lexer lexer;
 
-        Array token_str;
+    // lexer_new(&lexer);
 
-        array_new(&token_str, 1);
+    // Array src;
 
-        token_fmt_str(&token_str, token);
+    // array_new(&src, 1);
 
-        printf("%s\n", token_str.data);
+    // read_file("tokens.prog", &src);
 
-        array_free(&token_str);
+    // if (src.len == 0)
+    // {
+    //     fprintf(stderr, "could not read source file\n");
+    //     return -1;
+    // }
 
-    } while (token.type != TK_EOF);
+    // lexer.src = src.data;
+    // lexer.src_len = src.len;
 
-    free(src);
+    // Token token;
+
+    // do 
+    // {
+    //     token = advance_token(&lexer);
+
+    //     Array token_str;
+
+    //     array_new(&token_str, 1);
+
+    //     token_fmt_str(&token_str, token);
+
+    //     printf("%s\n", token_str.data);
+
+    //     array_free(&token_str);
+
+    // } while (token.type != TK_EOF);
+
+    // array_free(&src);
 }
 

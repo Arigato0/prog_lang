@@ -12,6 +12,8 @@ typedef struct
 
 void array_new(Array *array, size_t elem_size);
 
+void array_reserve(Array *array, size_t cap);
+
 void array_resize(Array *array, size_t new_size);
 
 void array_append(Array *array, void *data);
