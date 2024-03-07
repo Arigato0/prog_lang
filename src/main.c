@@ -14,59 +14,57 @@ int main()
         {"if", TK_IF},
     };
 
-    TrieNode *root = trie_new_node();
+    TrieNode *keyword_tree = trie_new_node();
 
-    trie_set(root, keywords, sizeof(keywords) / sizeof(Keyword));
+    trie_set(keyword_tree, keywords, sizeof(keywords) / sizeof(Keyword));
 
-    TOKEN_TYPE tk_type = trie_match(root, "if");
+    Lexer lexer;
 
-    if (tk_type == 0)
+    lexer_new(&lexer);
+    
+    Array src;
+
+    array_new(&src, 1);
+
+    read_file("tokens.prog", &src);
+
+    if (src.len == 0)
     {
-        printf("could not match\n");
+        fprintf(stderr, "could not read source file\n");
         return -1;
     }
 
-    printf("%s\n", TK_STRING_TABLE[tk_type]);
+    lexer.src = src.data;
+    lexer.src_len = src.len;
+    lexer.keyword_tree = keyword_tree;
 
-    trie_free(root);
+    Token token;
 
-    // Lexer lexer;
+    do 
+    {
+        token = advance_token(&lexer);
 
-    // lexer_new(&lexer);
+        if (token.type == TK_ERROR)
+        {
+            fprintf(stderr, "Error while lexing (%d:%d): %s\n", 
+            token.line, token.column, token.str_value);
 
-    // Array src;
+            break;
+        }
 
-    // array_new(&src, 1);
+        Array token_str;
 
-    // read_file("tokens.prog", &src);
+        array_new(&token_str, 1);
 
-    // if (src.len == 0)
-    // {
-    //     fprintf(stderr, "could not read source file\n");
-    //     return -1;
-    // }
+        token_fmt_str(&token_str, token);
 
-    // lexer.src = src.data;
-    // lexer.src_len = src.len;
+        printf("%s\n", token_str.data);
 
-    // Token token;
+        array_free(&token_str);
 
-    // do 
-    // {
-    //     token = advance_token(&lexer);
+    } while (token.type != TK_EOF);
 
-    //     Array token_str;
-
-    //     array_new(&token_str, 1);
-
-    //     token_fmt_str(&token_str, token);
-
-    //     printf("%s\n", token_str.data);
-
-    //     array_free(&token_str);
-
-    // } while (token.type != TK_EOF);
-
-    // array_free(&src);
+    array_free(&src);
+    trie_free(keyword_tree);
 }
 

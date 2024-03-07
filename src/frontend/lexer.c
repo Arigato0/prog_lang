@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "ds/array.h"
+#include "ds/trie.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -15,14 +16,14 @@ void lexer_new(Lexer *lexer)
     lexer->current_line = 1;
 }
 
-Token make_error_token(const char *error)
+Token lexer_new_error(Lexer *lexer, const char *error)
 {
     Token out = 
     {
         .type = TK_ERROR,
         .str_value = error,
-        .line = 0,
-        .column = 0,
+        .line = lexer->current_line,
+        .column = lexer->current_column,
     };
 
     return out;
@@ -145,8 +146,24 @@ bool lexer_match_next(Lexer *lexer, char c)
     return false;
 }
 
-void lexer_handle_blank(Lexer *lexer)
+int lexer_get_indent_level(Lexer *lexer)
 {
+    if (lexer->indent_level >= LEXER_MAX_INDENT_LEVEL)
+    {
+        return -1;
+    }
+
+    return lexer->indent_table[lexer->indent_level];
+}
+
+Token lexer_handle_blank(Lexer *lexer)
+{
+    if (lexer->indent_level != 0 && lexer_get_indent_level(lexer) == lexer->indent_table[lexer->indent_level-1])
+    {
+        lexer->indent_level--;
+        return lexer_build_token(lexer, TK_SCOPE_END);
+    }
+
     char c;
 
     while ( (c = lexer_peak(lexer) ))
@@ -155,18 +172,19 @@ void lexer_handle_blank(Lexer *lexer)
         {
             case ' ': 
             {
-                lexer->indent_level++; 
+                lexer->indent_table[lexer->indent_level]++; 
                 break;
             }
             case '\t': 
             {
-                lexer->indent_level += 2; 
+                lexer->indent_table[lexer->indent_level] += 4; 
                 break;
             }
+            case '\r':
             case '\n': 
             {
                 lexer->current_column = 1;
-                lexer->indent_level = 0;
+                lexer->indent_table[lexer->indent_level] = 0;
                 lexer->current_line++;
 
                 break;
@@ -187,7 +205,18 @@ void lexer_handle_blank(Lexer *lexer)
     }
 
 while_end:
+
+    if (lexer->last_token == TK_SCOPE_START)
+    {
+        if (lexer_get_indent_level(lexer) <= lexer->indent_table[lexer->indent_level-1])
+        {
+            return lexer_new_error(lexer, "indent level is less than previous scope");
+        }
+    }
+
     lexer->start = lexer->off;
+
+    return lexer_build_token(lexer, TK_NO_TOKEN);
 }
 
 Token lexer_build_if_match(Lexer *lexer, char c, TOKEN_TYPE if_match, TOKEN_TYPE default_token)
@@ -222,20 +251,49 @@ scan_digits:
     // TODO: handle integral suffixes here IE: 5f should become a float
     else if (!is_blank(c))
     {
-        return make_error_token("Unexpected character found while lexing digit");
+        return lexer_new_error(lexer, "Unexpected character found while lexing digit");
     }
 
     return lexer_build_token(lexer, is_float ? TK_FLOAT : TK_INT);
+}
+
+bool lexer_is_id(char c)
+{
+    return isalnum(c) || c == '_';
+}
+
+Token lexer_build_id(Lexer *lexer)
+{
+    while (lexer_is_id(lexer_peak(lexer)))
+    {
+        lexer_advance(lexer);
+    }
+
+    Token token = lexer_build_token(lexer, TK_IDENTIFIER);
+
+    TOKEN_TYPE tk_type = trie_match(lexer->keyword_tree, token.str_value);
+
+    if (tk_type != 0)
+    {
+        token.type = tk_type;
+    }
+
+    return token;
 }
 
 Token advance_token(Lexer *lexer)
 {
     if (lexer == NULL || lexer->src == NULL)
     {
-        return make_error_token("Lexer or lexer source is null");
+        return lexer_new_error(lexer, "Lexer or lexer source is null");
     }
 
-    lexer_handle_blank(lexer);
+    Token blank_tk = lexer_handle_blank(lexer);
+
+    if (blank_tk.type != TK_NO_TOKEN)
+    {
+        return blank_tk;
+    }
 
     char c = lexer_advance(lexer);
 
@@ -245,7 +303,16 @@ Token advance_token(Lexer *lexer)
         case '-': return lexer_build_token(lexer, TK_MINUS);
         case '*': return lexer_build_token(lexer, TK_STAR);
         case '/': return lexer_build_token(lexer, TK_FORWARD_SLASH);
-        case ':': return lexer_build_if_match(lexer, '=', TK_COLON_EQUAL, TK_COLON);
+        case ':':
+        {
+            if (lexer_match_next(lexer, '='))
+            {
+                return lexer_build_token(lexer, TK_COLON_EQUAL);
+            }
+
+            lexer->indent_level++;
+            return lexer_build_token(lexer, TK_SCOPE_START);
+        } 
         case '=': return lexer_build_token(lexer, TK_EQUAL);
         case '(': return lexer_build_token(lexer, TK_LEFT_BRACKET);
         case ')': return lexer_build_token(lexer, TK_RIGHT_BRACKET);
@@ -267,8 +334,12 @@ Token advance_token(Lexer *lexer)
             {
                 return lexer_build_digit(lexer);
             }
+            else if (lexer_is_id(c))
+            {
+                return lexer_build_id(lexer);
+            }
         }
     }
 
-    return make_error_token("Unknown token found");
+    return lexer_new_error(lexer, "Unknown token found");
 }

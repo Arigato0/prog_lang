@@ -2,9 +2,13 @@
 
 #include "ds/array.h"
 
+#define LEXER_MAX_INDENT_LEVEL 256
+
 typedef enum 
 {
     TK_ERROR,
+    // to indicate no error happened
+    TK_NO_TOKEN,
     TK_PLUS, TK_MINUS, TK_STAR, TK_FORWARD_SLASH,
     TK_EQUAL, TK_COLON, TK_COLON_EQUAL, 
     TK_INT, TK_FLOAT, TK_STRING,
@@ -19,6 +23,7 @@ typedef enum
 static const char *TK_STRING_TABLE[] =
 {
     "Error",
+    "NoToken",
     "Plus", "Minus", "Star", "ForwardSlash",
     "Equal", "Colon", "ColonEqual",
     "Int", "Float", "String",
@@ -36,6 +41,8 @@ typedef struct
     int column;
 } Token;
 
+struct TrieNode;
+
 typedef struct 
 {
     const char *src;
@@ -45,6 +52,8 @@ typedef struct
     int current_line;
     int current_column;
     int indent_level;
+    int indent_table[LEXER_MAX_INDENT_LEVEL];
+    struct TrieNode *keyword_tree;
     TOKEN_TYPE last_token;
 } Lexer;
 
