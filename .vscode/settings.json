@@ -1,7 +1,8 @@
 {
-    "C_Cpp.default.compileCommands": "/home/arian/Documents/code/c/prog_lang/builddir/compile_commands.json",
+    "C_Cpp.default.compileCommands": "/home/arian/Documents/code/prog_lang/builddir/compile_commands.json",
     "C_Cpp.intelliSenseEngine": "disabled",
     "clangd.fallbackFlags": [
         "-I${workspaceFolder}/src/"
-    ]
+    ],
+    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild"
 }

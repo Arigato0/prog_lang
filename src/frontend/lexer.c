@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <alloca.h>
 
 void lexer_new(Lexer *lexer)
 {
@@ -49,15 +52,19 @@ Token lexer_build_token(Lexer *lexer, TOKEN_TYPE type)
 
     lexer->start = lexer->off;
     lexer->last_token = type;
+    lexer->indent_level = 0;
+    lexer->in_middle = true;
 
     return out;
 }
 
 int token_get_string_size(Token token)
 {
+    int str_size = token.type == TK_INDENT ? sizeof(int) : strlen(token.str_value);
+
     return 
     strlen(TK_STRING_TABLE[token.type]) 
-    + strlen(token.str_value) 
+    + str_size
     + sizeof(token.line) 
     + sizeof(token.column);
 }
@@ -69,8 +76,17 @@ void token_to_string(Token token, char *buffer)
         return;
     }
 
+    char *value = token.str_value;
+
+    if (token.type == TK_INDENT)
+    {
+        int n = (int)token.str_value;
+        value = alloca(26);
+        sprintf(value, "%d", n);
+    }
+
     sprintf(buffer, "%s(value: %s, %d:%d)", 
-    TK_STRING_TABLE[token.type], token.str_value, token.line, token.column);
+    TK_STRING_TABLE[token.type], value, token.line, token.column);
 }
 
 void token_fmt_str(Array *array, Token token)
@@ -146,24 +162,8 @@ bool lexer_match_next(Lexer *lexer, char c)
     return false;
 }
 
-int lexer_get_indent_level(Lexer *lexer)
-{
-    if (lexer->indent_level >= LEXER_MAX_INDENT_LEVEL)
-    {
-        return -1;
-    }
-
-    return lexer->indent_table[lexer->indent_level];
-}
-
 Token lexer_handle_blank(Lexer *lexer)
 {
-    if (lexer->indent_level != 0 && lexer_get_indent_level(lexer) == lexer->indent_table[lexer->indent_level-1])
-    {
-        lexer->indent_level--;
-        return lexer_build_token(lexer, TK_SCOPE_END);
-    }
-
     char c;
 
     while ( (c = lexer_peak(lexer) ))
@@ -171,22 +171,23 @@ Token lexer_handle_blank(Lexer *lexer)
         switch (c)
         {
             case ' ': 
+
             {
-                lexer->indent_table[lexer->indent_level]++; 
+                lexer->indent_level++; 
                 break;
             }
             case '\t': 
             {
-                lexer->indent_table[lexer->indent_level] += 4; 
+                lexer->indent_level += 4;
                 break;
             }
             case '\r':
             case '\n': 
             {
                 lexer->current_column = 1;
-                lexer->indent_table[lexer->indent_level] = 0;
+                lexer->indent_level = 0;
                 lexer->current_line++;
-
+                lexer->in_middle = false;
                 break;
             }
             case '#':
@@ -205,16 +206,14 @@ Token lexer_handle_blank(Lexer *lexer)
     }
 
 while_end:
-
-    if (lexer->last_token == TK_SCOPE_START)
+    int indent = lexer->indent_level;
+                
+    if (indent > 0 && !lexer->in_middle)
     {
-        if (lexer_get_indent_level(lexer) <= lexer->indent_table[lexer->indent_level-1])
-        {
-            return lexer_new_error(lexer, "indent level is less than previous scope");
-        }
+        Token indent_tk = lexer_build_token(lexer, TK_INDENT);
+        indent_tk.str_value = (char*)indent;
+        return indent_tk;
     }
-
-    lexer->start = lexer->off;
 
     return lexer_build_token(lexer, TK_NO_TOKEN);
 }
@@ -247,11 +246,6 @@ scan_digits:
         is_float = true;
         lexer_advance(lexer);
         goto scan_digits;
-    }
-    // TODO: handle integral suffixes here IE: 5f should become a float
-    else if (!is_blank(c))
-    {
-        return lexer_new_error(lexer, "Unexpected character found while lexing digit");
     }
 
     return lexer_build_token(lexer, is_float ? TK_FLOAT : TK_INT);
@@ -311,7 +305,7 @@ Token advance_token(Lexer *lexer)
             }
 
             lexer->indent_level++;
-            return lexer_build_token(lexer, TK_SCOPE_START);
+            return lexer_build_token(lexer, TK_COLON);
         } 
         case '=': return lexer_build_token(lexer, TK_EQUAL);
         case '(': return lexer_build_token(lexer, TK_LEFT_BRACKET);
