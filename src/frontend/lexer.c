@@ -293,21 +293,15 @@ Token advance_token(Lexer *lexer)
 
     switch (c)
     {
-        case '+': return lexer_build_token(lexer, TK_PLUS);
-        case '-': return lexer_build_token(lexer, TK_MINUS);
+        case '+': return lexer_build_if_match(lexer, '=', TK_PLUS_EQUAL, TK_PLUS);
+        case '-': return lexer_build_if_match(lexer, '=', TK_MINUS_EQUAL, TK_MINUS);
         case '*': return lexer_build_token(lexer, TK_STAR);
         case '/': return lexer_build_token(lexer, TK_FORWARD_SLASH);
-        case ':':
-        {
-            if (lexer_match_next(lexer, '='))
-            {
-                return lexer_build_token(lexer, TK_COLON_EQUAL);
-            }
-
-            lexer->indent_level++;
-            return lexer_build_token(lexer, TK_COLON);
-        } 
-        case '=': return lexer_build_token(lexer, TK_EQUAL);
+        case ':': return lexer_build_if_match(lexer, '=', TK_COLON_EQUAL, TK_COLON);
+        case '=': return lexer_build_if_match(lexer, '=', TK_EQUAL_EQUAL, TK_EQUAL);
+        case '<': return lexer_build_if_match(lexer, '=', TK_LESS_EQUAL, TK_LESS);
+        case '>': return lexer_build_if_match(lexer, '=', TK_GREATER_EQUAL, TK_GREATER);
+        case '!': return lexer_build_if_match(lexer, '=', TK_BANG_EQUAL, TK_BANG);
         case '(': return lexer_build_token(lexer, TK_LEFT_BRACKET);
         case ')': return lexer_build_token(lexer, TK_RIGHT_BRACKET);
         case '\0':

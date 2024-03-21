@@ -12,6 +12,11 @@ int main()
     {
         {"func", TK_FUNC},
         {"if", TK_IF},
+        {"else", TK_ELSE},
+        {"for", TK_FOR},
+        {"while", TK_WHILE},
+        {"return", TK_RETURN},
+        {"class", TK_CLASS},
     };
 
     TrieNode *keyword_tree = trie_new_node();
