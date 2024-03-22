@@ -20,8 +20,7 @@ typedef enum
     TK_IDENTIFIER, TK_IF, TK_ELSE, TK_FUNC, TK_FOR, TK_WHILE, 
     TK_RETURN, TK_CLASS, TK_TRUE, TK_FALSE, TK_NIL, TK_IN,
     TK_LEFT_BRACKET, TK_RIGHT_BRACKET, TK_LEFT_SQUARE_BRACKET, TK_RIGHT_SQUARE_BRACKET,
-
-    TK_SCOPE_START, TK_SCOPE_END, 
+    TK_COMMA,
 
     TK_EOF
 } TOKEN_TYPE;
@@ -40,7 +39,7 @@ static const char *TK_STRING_TABLE[] =
     "Identifier", "If", "Else", "Func", "For", "While",
     "Return", "Class", "True", "False", "Nil", "In",
     "LeftBracket", "RightBracket", "LeftSquareBracket", "RightSquareBracket",
-    "ScopeStart", "ScopeEnd",
+    "Comma",
     "EOF"
 };
 

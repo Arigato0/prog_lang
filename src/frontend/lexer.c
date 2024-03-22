@@ -289,9 +289,9 @@ Token lexer_build_string(Lexer *lexer)
 {
     char starting_token = lexer_peak_last(lexer);
 
-    while (!lexer_at_end(lexer) && lexer_peak(lexer) != '"')
+    while (!lexer_at_end(lexer) && lexer_peak(lexer) != starting_token)
     {
-        advance_token(lexer);
+        lexer_advance(lexer);
     }
 
     if (lexer_peak(lexer) != starting_token)
@@ -299,9 +299,11 @@ Token lexer_build_string(Lexer *lexer)
         return lexer_new_error(lexer, "unclosed string found");
     }
 
+    lexer->start++;
+
     Token literal_token = lexer_build_token(lexer, TK_STRING);
 
-    advance_token(lexer);
+    lexer_advance(lexer);
 
     return literal_token;
 }
@@ -337,7 +339,8 @@ Token advance_token(Lexer *lexer)
         case ')': return lexer_build_token(lexer, TK_RIGHT_BRACKET);
         case '[': return lexer_build_token(lexer, TK_LEFT_SQUARE_BRACKET);
         case ']': return lexer_build_token(lexer, TK_RIGHT_SQUARE_BRACKET);
-        case '"':
+        case ',': return lexer_build_token(lexer, TK_COMMA);
+        case '"': 
         case '\'': return lexer_build_string(lexer); 
         case '\0':
         {
