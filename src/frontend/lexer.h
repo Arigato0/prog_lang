@@ -7,9 +7,9 @@
 
 typedef enum 
 {
-    // to indicate no error happened
     TK_ERROR,
     TK_INDENT,
+    // to indicate no error happened
     TK_NO_TOKEN,
     TK_PLUS, TK_MINUS, TK_STAR, TK_FORWARD_SLASH,
     TK_PLUS_EQUAL, TK_MINUS_EQUAL,
@@ -18,8 +18,8 @@ typedef enum
     TK_BANG, TK_BANG_EQUAL,
     TK_INT, TK_FLOAT, TK_STRING,
     TK_IDENTIFIER, TK_IF, TK_ELSE, TK_FUNC, TK_FOR, TK_WHILE, 
-    TK_RETURN, TK_CLASS,
-    TK_LEFT_BRACKET, TK_RIGHT_BRACKET,
+    TK_RETURN, TK_CLASS, TK_TRUE, TK_FALSE, TK_NIL, TK_IN,
+    TK_LEFT_BRACKET, TK_RIGHT_BRACKET, TK_LEFT_SQUARE_BRACKET, TK_RIGHT_SQUARE_BRACKET,
 
     TK_SCOPE_START, TK_SCOPE_END, 
 
@@ -32,14 +32,14 @@ static const char *TK_STRING_TABLE[] =
     "Indent",
     "NoToken",
     "Plus", "Minus", "Star", "ForwardSlash",
-    "Equal", "EqualEqual", "Colon", "ColonEqual",
     "PlusEqual", "MinusEqual",
+    "Equal", "EqualEqual", "Colon", "ColonEqual",
     "Less", "Greater", "LessEqual", "GreaterEqual",
     "Bang", "BangEqual",
     "Int", "Float", "String",
     "Identifier", "If", "Else", "Func", "For", "While",
-    "Return", "Class",
-    "LeftBracket", "RightBracket",
+    "Return", "Class", "True", "False", "Nil", "In",
+    "LeftBracket", "RightBracket", "LeftSquareBracket", "RightSquareBracket",
     "ScopeStart", "ScopeEnd",
     "EOF"
 };

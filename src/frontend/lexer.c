@@ -275,6 +275,37 @@ Token lexer_build_id(Lexer *lexer)
     return token;
 }
 
+char lexer_peak_last(Lexer *lexer)
+{
+    if (lexer->off <= 0)
+    {
+        return '\0';
+    }
+
+    return lexer->src[lexer->off-1];
+}
+
+Token lexer_build_string(Lexer *lexer)
+{
+    char starting_token = lexer_peak_last(lexer);
+
+    while (!lexer_at_end(lexer) && lexer_peak(lexer) != '"')
+    {
+        advance_token(lexer);
+    }
+
+    if (lexer_peak(lexer) != starting_token)
+    {
+        return lexer_new_error(lexer, "unclosed string found");
+    }
+
+    Token literal_token = lexer_build_token(lexer, TK_STRING);
+
+    advance_token(lexer);
+
+    return literal_token;
+}
+
 Token advance_token(Lexer *lexer)
 {
     if (lexer == NULL || lexer->src == NULL)
@@ -304,6 +335,10 @@ Token advance_token(Lexer *lexer)
         case '!': return lexer_build_if_match(lexer, '=', TK_BANG_EQUAL, TK_BANG);
         case '(': return lexer_build_token(lexer, TK_LEFT_BRACKET);
         case ')': return lexer_build_token(lexer, TK_RIGHT_BRACKET);
+        case '[': return lexer_build_token(lexer, TK_LEFT_SQUARE_BRACKET);
+        case ']': return lexer_build_token(lexer, TK_RIGHT_SQUARE_BRACKET);
+        case '"':
+        case '\'': return lexer_build_string(lexer); 
         case '\0':
         {
             Token eof =

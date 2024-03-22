@@ -17,6 +17,10 @@ int main()
         {"while", TK_WHILE},
         {"return", TK_RETURN},
         {"class", TK_CLASS},
+        {"true", TK_TRUE},
+        {"false", TK_FALSE},
+        {"nil", TK_NIL},
+        {"in", TK_IN},
     };
 
     TrieNode *keyword_tree = trie_new_node();

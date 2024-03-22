@@ -1,5 +1,6 @@
 #include "trie.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,11 +28,14 @@ void trie_set(TrieNode *root, Keyword *keywords, int keyword_size)
 
         TrieNode *node = root;
 
-        for (int i = 0; i < len; i++)
+        for (int j = 0; j < len; j++)
         {
-            char c = TRIE_GET_INDEX(keyword.str[i]);
+            char c = TRIE_GET_INDEX(keyword.str[j]);
 
-            node->next[c] = trie_new_node();
+            if (node->next[c] == NULL)
+            {
+                node->next[c] = trie_new_node();
+            }
 
             node = node->next[c];
         }

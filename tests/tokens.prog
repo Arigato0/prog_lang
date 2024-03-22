@@ -1,17 +1,14 @@
-# hello there
-    = * (- +  /:=)
-5234
 
-3.14
+func print_all(container):
+    for item in container:
+        println(item)
+    println("Done!")
 
-hello
+print_all([1, 2, 3, 4])
 
-if
+is_true := true 
 
-func do_stuff(x):
-    println(x)
-
-    if x <= 10:
-        do_other_stuff()
-
-a
+if is_true:
+    print("its true!")
+else:
+    print("its false")
