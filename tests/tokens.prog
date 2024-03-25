@@ -1,9 +1,9 @@
 
-func print_all(container):
+print_all :: proc(container):
     for item in container:
         println(item)
     println("Done!")
-    
+
 print_all([1, 2, 3, 4])
 
 is_true := true 
@@ -11,4 +11,4 @@ is_true := true
 if is_true:
     print("its true!")
 else:
-    print("its false")
+    print("its false!")

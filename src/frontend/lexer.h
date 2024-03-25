@@ -13,11 +13,11 @@ typedef enum
     TK_NO_TOKEN,
     TK_PLUS, TK_MINUS, TK_STAR, TK_FORWARD_SLASH,
     TK_PLUS_EQUAL, TK_MINUS_EQUAL,
-    TK_EQUAL, TK_EQUAL_EQUAL, TK_COLON, TK_COLON_EQUAL,
+    TK_EQUAL, TK_EQUAL_EQUAL, TK_COLON, TK_COLON_EQUAL, TK_COLON_COLON,
     TK_LESS, TK_GREATER, TK_LESS_EQUAL, TK_GREATER_EQUAL, 
     TK_BANG, TK_BANG_EQUAL,
     TK_INT, TK_FLOAT, TK_STRING,
-    TK_IDENTIFIER, TK_IF, TK_ELSE, TK_FUNC, TK_FOR, TK_WHILE, 
+    TK_IDENTIFIER, TK_IF, TK_ELSE, TK_PROC, TK_FOR, TK_WHILE, 
     TK_RETURN, TK_CLASS, TK_TRUE, TK_FALSE, TK_NIL, TK_IN,
     TK_LEFT_BRACKET, TK_RIGHT_BRACKET, TK_LEFT_SQUARE_BRACKET, TK_RIGHT_SQUARE_BRACKET,
     TK_COMMA,
@@ -32,11 +32,11 @@ static const char *TK_STRING_TABLE[] =
     "NoToken",
     "Plus", "Minus", "Star", "ForwardSlash",
     "PlusEqual", "MinusEqual",
-    "Equal", "EqualEqual", "Colon", "ColonEqual",
+    "Equal", "EqualEqual", "Colon", "ColonEqual", "ColonColon",
     "Less", "Greater", "LessEqual", "GreaterEqual",
     "Bang", "BangEqual",
     "Int", "Float", "String",
-    "Identifier", "If", "Else", "Func", "For", "While",
+    "Identifier", "If", "Else", "Proc", "For", "While",
     "Return", "Class", "True", "False", "Nil", "In",
     "LeftBracket", "RightBracket", "LeftSquareBracket", "RightSquareBracket",
     "Comma",
@@ -77,4 +77,4 @@ void token_fmt_str(Array *array, Token token);
 
 void lexer_new(Lexer *lexer);
 
-Token advance_token(Lexer *lexer);
+Token lexer_advance_token(Lexer *lexer);

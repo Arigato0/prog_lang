@@ -6,11 +6,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void print_tokens(Lexer *lexer)
+{
+    Token token;
+
+    do 
+    {
+        token = lexer_advance_token(lexer);
+
+        if (token.type == TK_ERROR)
+        {
+            fprintf(stderr, "Error while lexing (%d:%d): %s\n", 
+            token.line, token.column, token.str_value);
+
+            break;
+        }
+
+        Array token_str;
+
+        array_new(&token_str, 1);
+
+        token_fmt_str(&token_str, token);
+
+        printf("%s\n", token_str.data);
+
+        array_free(&token_str);
+
+    } while (token.type != TK_EOF);
+}
+
 int main()
 {
     Keyword keywords[] =
     {
-        {"func", TK_FUNC},
+        {"proc", TK_PROC},
         {"if", TK_IF},
         {"else", TK_ELSE},
         {"for", TK_FOR},
@@ -47,31 +76,7 @@ int main()
     lexer.src_len = src.len;
     lexer.keyword_tree = keyword_tree;
 
-    Token token;
-
-    do 
-    {
-        token = advance_token(&lexer);
-
-        if (token.type == TK_ERROR)
-        {
-            fprintf(stderr, "Error while lexing (%d:%d): %s\n", 
-            token.line, token.column, token.str_value);
-
-            break;
-        }
-
-        Array token_str;
-
-        array_new(&token_str, 1);
-
-        token_fmt_str(&token_str, token);
-
-        printf("%s\n", token_str.data);
-
-        array_free(&token_str);
-
-    } while (token.type != TK_EOF);
+    print_tokens(&lexer);
 
     array_free(&src);
     trie_free(keyword_tree);

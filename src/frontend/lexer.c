@@ -308,7 +308,7 @@ Token lexer_build_string(Lexer *lexer)
     return literal_token;
 }
 
-Token advance_token(Lexer *lexer)
+Token lexer_advance_token(Lexer *lexer)
 {
     if (lexer == NULL || lexer->src == NULL)
     {
@@ -330,7 +330,22 @@ Token advance_token(Lexer *lexer)
         case '-': return lexer_build_if_match(lexer, '=', TK_MINUS_EQUAL, TK_MINUS);
         case '*': return lexer_build_token(lexer, TK_STAR);
         case '/': return lexer_build_token(lexer, TK_FORWARD_SLASH);
-        case ':': return lexer_build_if_match(lexer, '=', TK_COLON_EQUAL, TK_COLON);
+        case ':': 
+        {
+            if (lexer_match_next(lexer, '='))
+            {
+                return lexer_build_token(lexer, TK_COLON_EQUAL);
+            }
+            else if (lexer_match_next(lexer, ':'))
+            {
+                return lexer_build_token(lexer, TK_COLON_COLON);
+            }
+            else 
+            {
+                return lexer_build_token(lexer, TK_COLON);
+            }
+        }
+        return lexer_build_if_match(lexer, '=', TK_COLON_EQUAL, TK_COLON);
         case '=': return lexer_build_if_match(lexer, '=', TK_EQUAL_EQUAL, TK_EQUAL);
         case '<': return lexer_build_if_match(lexer, '=', TK_LESS_EQUAL, TK_LESS);
         case '>': return lexer_build_if_match(lexer, '=', TK_GREATER_EQUAL, TK_GREATER);
