@@ -1,5 +1,7 @@
 project('prog', 'c')
 
+compiler = meson.get_compiler('c')
+
 incdir = include_directories('src/')
 
 executable('prog', [

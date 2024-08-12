@@ -1,0 +1,39 @@
+
+
+struct User:
+
+  # body can be optional so it will just assign params to this
+  init(username, password)
+
+  # with body
+  init(id):
+    set_from_id(id)
+
+  fn greet():
+    println(f"hello{this.username}")
+
+# adds an override to the global to_string function
+fn to_string(user:User):
+  pass
+
+#can define a template instead thats like a very limited base class that can be optionally typed
+template UserTemplate:
+  username: string
+  password: string
+
+  fn greet():
+    println(f"hello{this.username}")
+
+struct UserFromTemplate from UserTemplate:
+  fn change_password(old, new):
+    pass
+
+# main is optional will execute from here if defined or if being run directly
+fn main():
+  user := User("john smith", "donthackme")
+
+  user.greet()
+
+  
+
+

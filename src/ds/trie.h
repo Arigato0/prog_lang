@@ -8,7 +8,6 @@
 #define TRIE_ALPHABET_END 'z'
 #define TRIE_ALPHABET_SIZE TRIE_ALPHABET_END - TRIE_ALPHABET_START
 
-struct TrieNode;
 
 typedef struct 
 {
@@ -18,7 +17,7 @@ typedef struct
 
 typedef struct
 {
-    struct TrieNode *next[TRIE_ALPHABET_SIZE];
+    void *next[TRIE_ALPHABET_SIZE];
     TOKEN_TYPE tk_type;
 } TrieNode;
 

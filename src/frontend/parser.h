@@ -3,11 +3,10 @@
 #include "ds/array.h"
 #include "frontend/lexer.h"
 
-struct Parent;
 
 typedef struct 
 {
-    struct AstNode *parent;
+    void *parent;
     Array children;
     Token token;
 } AstNode;

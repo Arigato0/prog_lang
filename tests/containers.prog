@@ -1,0 +1,17 @@
+
+
+numbers := [1, 8, 3, 32]
+
+even_numbers := select n from numbers where n % 2 == 0
+
+println(even_numbers)
+
+scores := map {
+    "john smith": 623,
+    "allen baker": 92,
+    "richard rook": 320
+}
+
+highest_score := select name, score from scores with highest score
+
+println(highest_score)

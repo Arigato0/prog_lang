@@ -51,8 +51,6 @@ typedef struct
     int column;
 } Token;
 
-struct TrieNode;
-
 typedef struct 
 {
     const char *src;
@@ -64,7 +62,7 @@ typedef struct
     int indent_level;
     // checks if its in a middle of significant tokens
     bool in_middle;
-    struct TrieNode *keyword_tree;
+    void *keyword_tree;
     TOKEN_TYPE last_token;
 } Lexer;
 
