@@ -1,0 +1,24 @@
+
+# these functions return the result of their expression
+fn add(a, b) => a + b
+fn my_func(value) => if value: "yes" else: 0
+
+fn say_hello(name):
+    println(f"hello {name}")
+
+fn multi_return():
+    return "apple", 10
+
+fruit, amount := multi_return()
+
+# both the parameter and the return value can be statically typed and the return value can also be optionally bound to a symbol
+fn typed_fn(s string) n int :
+    n = len(s)
+    println(f"string {s} is {n} characters long)
+    return n
+
+fn default_params(name, id = 0):
+    pass
+
+# example of named paramaters that can work in any place parameters exit such as attributes
+default_params(id = 320, name = "john")

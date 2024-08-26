@@ -2,6 +2,7 @@
 
 numbers := [1, 8, 3, 32]
 
+# sql like syntax for querying any container
 even_numbers := select n from numbers where n % 2 == 0
 
 println(even_numbers)
@@ -12,6 +13,7 @@ scores := map {
     "richard rook": 320
 }
 
+# highest is a keyword that will find the max score
 highest_score := select name, score from scores with highest score
 
 println(highest_score)

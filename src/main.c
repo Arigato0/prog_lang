@@ -1,38 +1,54 @@
 #include "ds/array.h"
 #include "ds/trie.h"
 #include "frontend/lexer.h"
+#include "frontend/parser.h"
 #include "util/io.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_tokens(Lexer *lexer)
+void make_tokens(Lexer *lexer, Array *out_tokens)
 {
     Token token;
 
-    do 
+    do
     {
         token = lexer_advance_token(lexer);
 
         if (token.type == TK_ERROR)
         {
-            fprintf(stderr, "Error while lexing (%d:%d): %s\n", 
+            fprintf(stderr, "Error while lexing (%d:%d): %s\n",
             token.line, token.column, token.str_value);
 
-            break;
+            exit(-1);
         }
 
+        array_append(out_tokens, &token);
+
+    } while (token.type != TK_EOF);
+}
+
+void print_tokens(Array *tokens)
+{
+    for (int i = 0; i < tokens->len; i++)
+    {
         Array token_str;
 
         array_new(&token_str, 1);
+
+        Token *token = array_get(tokens, i);
 
         token_fmt_str(&token_str, token);
 
         printf("%s\n", token_str.data);
 
         array_free(&token_str);
+    }
+}
 
-    } while (token.type != TK_EOF);
+void parse_tokens(Parser *parser, Array *tokens)
+{
+    parse(parser);
 }
 
 int main()
@@ -45,11 +61,12 @@ int main()
         {"for", TK_FOR},
         {"while", TK_WHILE},
         {"return", TK_RETURN},
-        {"class", TK_CLASS},
+        {"struct", TK_STRUCT},
         {"true", TK_TRUE},
         {"false", TK_FALSE},
         {"nil", TK_NIL},
         {"in", TK_IN},
+        {"pass", TK_PASS}
     };
 
     TrieNode *keyword_tree = trie_new_node();
@@ -59,12 +76,12 @@ int main()
     Lexer lexer;
 
     lexer_new(&lexer);
-    
+
     Array src;
 
     array_new(&src, 1);
 
-    read_file("tokens.prog", &src);
+    read_file("parsing.prog", &src);
 
     if (src.len == 0)
     {
@@ -76,9 +93,21 @@ int main()
     lexer.src_len = src.len;
     lexer.keyword_tree = keyword_tree;
 
-    print_tokens(&lexer);
+    Array tokens;
+
+    array_new(&tokens, sizeof(Token));
+
+    make_tokens(&lexer, &tokens);
+
+    print_tokens(&tokens);
+
+    Parser parser;
+
+    parser.tokens = &tokens;
+    parser.lexer = &lexer;
+
+    parse_tokens(&parser, &tokens);
 
     array_free(&src);
     trie_free(keyword_tree);
 }
-

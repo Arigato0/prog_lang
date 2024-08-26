@@ -21,7 +21,7 @@ void lexer_new(Lexer *lexer)
 
 Token lexer_new_error(Lexer *lexer, const char *error)
 {
-    Token out = 
+    Token out =
     {
         .type = TK_ERROR,
         .str_value = error,
@@ -42,7 +42,7 @@ Token lexer_build_token(Lexer *lexer, TOKEN_TYPE type)
 
     substr[token_len] = '\0';
 
-    Token out = 
+    Token out =
     {
         .type = type,
         .str_value = substr,
@@ -58,38 +58,38 @@ Token lexer_build_token(Lexer *lexer, TOKEN_TYPE type)
     return out;
 }
 
-int token_get_string_size(Token token)
+int token_get_string_size(Token *token)
 {
-    int str_size = token.type == TK_INDENT ? sizeof(int) : strlen(token.str_value);
+    int str_size = token->type == TK_INDENT ? sizeof(int) : strlen(token->str_value);
 
-    return 
-    strlen(TK_STRING_TABLE[token.type]) 
+    return
+    strlen(TK_STRING_TABLE[token->type])
     + str_size
-    + sizeof(token.line) 
-    + sizeof(token.column);
+    + sizeof(token->line)
+    + sizeof(token->column);
 }
 
-void token_to_string(Token token, char *buffer)
+void token_to_string(Token *token, char *buffer)
 {
     if (buffer == NULL)
     {
         return;
     }
 
-    char *value = token.str_value;
+    char *value = token->str_value;
 
-    if (token.type == TK_INDENT)
+    if (token->type == TK_INDENT)
     {
-        int n = (int)token.str_value;
+        int n = (int)token->str_value;
         value = alloca(26);
         sprintf(value, "%d", n);
     }
 
-    sprintf(buffer, "%s(value: %s, %d:%d)", 
-    TK_STRING_TABLE[token.type], value, token.line, token.column);
+    sprintf(buffer, "%s(value: %s, %d:%d)",
+    TK_STRING_TABLE[token->type], value, token->line, token->column);
 }
 
-void token_fmt_str(Array *array, Token token)
+void token_fmt_str(Array *array, Token *token)
 {
     int tk_len = token_get_string_size(token);
 
@@ -143,10 +143,10 @@ char lexer_advance(Lexer *lexer)
 
 bool is_blank(char c)
 {
-    return 
-       c == ' ' 
-    || c == '\t' 
-    || c == '\r' 
+    return
+       c == ' '
+    || c == '\t'
+    || c == '\r'
     || c == '\n'
     || c == '\0';
 }
@@ -170,19 +170,19 @@ Token lexer_handle_blank(Lexer *lexer)
     {
         switch (c)
         {
-            case ' ': 
+            case ' ':
 
             {
-                lexer->indent_level++; 
+                lexer->indent_level++;
                 break;
             }
-            case '\t': 
+            case '\t':
             {
                 lexer->indent_level += 4;
                 break;
             }
             case '\r':
-            case '\n': 
+            case '\n':
             {
                 lexer->current_column = 1;
                 lexer->indent_level = 0;
@@ -190,6 +190,7 @@ Token lexer_handle_blank(Lexer *lexer)
                 lexer->in_middle = false;
                 break;
             }
+            // TODO: add multile comments with ## to start and ## to end. EXAMPLE: ## this is a comment ##
             case '#':
             {
                 while (!lexer_at_end(lexer) && lexer_peak_next(lexer) != '\n')
@@ -202,12 +203,12 @@ Token lexer_handle_blank(Lexer *lexer)
             default: goto while_end;
         }
 
-        c = lexer_advance(lexer);    
+        c = lexer_advance(lexer);
     }
 
 while_end:
     int indent = lexer->indent_level;
-                
+
     if (indent > 0 && !lexer->in_middle)
     {
         Token indent_tk = lexer_build_token(lexer, TK_INDENT);
@@ -330,7 +331,7 @@ Token lexer_advance_token(Lexer *lexer)
         case '-': return lexer_build_if_match(lexer, '=', TK_MINUS_EQUAL, TK_MINUS);
         case '*': return lexer_build_token(lexer, TK_STAR);
         case '/': return lexer_build_token(lexer, TK_FORWARD_SLASH);
-        case ':': 
+        case ':':
         {
             if (lexer_match_next(lexer, '='))
             {
@@ -340,7 +341,7 @@ Token lexer_advance_token(Lexer *lexer)
             {
                 return lexer_build_token(lexer, TK_COLON_COLON);
             }
-            else 
+            else
             {
                 return lexer_build_token(lexer, TK_COLON);
             }
@@ -351,12 +352,13 @@ Token lexer_advance_token(Lexer *lexer)
         case '>': return lexer_build_if_match(lexer, '=', TK_GREATER_EQUAL, TK_GREATER);
         case '!': return lexer_build_if_match(lexer, '=', TK_BANG_EQUAL, TK_BANG);
         case '(': return lexer_build_token(lexer, TK_LEFT_BRACKET);
+        case '.': return lexer_build_token(lexer, TK_DOT);
         case ')': return lexer_build_token(lexer, TK_RIGHT_BRACKET);
         case '[': return lexer_build_token(lexer, TK_LEFT_SQUARE_BRACKET);
         case ']': return lexer_build_token(lexer, TK_RIGHT_SQUARE_BRACKET);
         case ',': return lexer_build_token(lexer, TK_COMMA);
-        case '"': 
-        case '\'': return lexer_build_string(lexer); 
+        case '"':
+        case '\'': return lexer_build_string(lexer);
         case '\0':
         {
             Token eof =
