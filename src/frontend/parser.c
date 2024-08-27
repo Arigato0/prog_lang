@@ -159,15 +159,16 @@ Expr* parser_primary(Parser *parser)
     }
     else if (PARSER_MATCH(parser, TK_LEFT_BRACKET))
     {
-        Expr *expr = parser_expr(parser);
+        Expr *inside_expr = parser_expr(parser);
 
         bool ok = parser_expect(parser, TK_RIGHT_BRACKET, "expected a right bracket to match the left one");
 
-        SingleExpr *single = malloc(sizeof(SingleExpr));
+        Expr *expr = malloc(sizeof(Expr));
 
-        single->expr = expr;
+        expr->as.single.expr = inside_expr;
+        expr->type = EXPR_SINGLE;
 
-        return (Expr*)expr;
+        return inside_expr;
     }
 }
 
