@@ -33,8 +33,6 @@ typedef struct
     Token *value;
 } LiteralExpr;
 
-
-
 // represents variables and function names
 typedef struct
 {
@@ -57,6 +55,7 @@ struct Expr
         EXPR_LITERAL,
         EXPR_UNARY,
         EXPR_IDENTIFIER,
+        EXPR_SINGLE,
     } type;
 
     union
@@ -66,6 +65,7 @@ struct Expr
         UnaryExpr unary;
         LiteralExpr literal;
         IdentifierExpr identifier;
+        SingleExpr single;
     } as;
 
 };

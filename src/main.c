@@ -51,6 +51,44 @@ void parse_tokens(Parser *parser, Array *tokens)
     parse(parser);
 }
 
+void print_ast(Expr *root, int depth)
+{
+    if (root == NULL)
+    {
+        return;
+    }
+
+    for (int i = 0; i < depth; i++)
+    {
+        printf(" ");
+    }
+
+    depth++;
+    
+    switch (root->type)
+    {
+    case EXPR_ERROR:
+        printf("ran into an error\n");
+        break;
+    case EXPR_BINARY:  
+    {
+        printf("%s:\n", root->as.binary.operator->str_value);
+        print_ast(root->as.binary.left, depth);
+        print_ast(root->as.binary.right, depth);
+        break;
+    }
+    case EXPR_LITERAL:
+        printf("%s:\n", root->as.literal.value->str_value);
+        break;
+    case EXPR_UNARY:
+        printf("%s:\n", root->as.unary.operator->str_value);
+        print_ast(root->as.unary.right, depth);
+        break;
+    case EXPR_IDENTIFIER:
+      break;
+    }
+}
+
 int main()
 {
     Keyword keywords[] =
@@ -107,6 +145,9 @@ int main()
     parser.lexer = &lexer;
 
     parse_tokens(&parser, &tokens);
+
+    // printf("%s\n", parser.root->as.binary.left->as.literal.value->str_value);
+    print_ast(parser.root, 0);
 
     array_free(&src);
     trie_free(keyword_tree);

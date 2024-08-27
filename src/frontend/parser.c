@@ -23,16 +23,12 @@ Token* parser_previous(Parser *parser)
 
 void parser_advance(Parser *parser)
 {
-    Token token = lexer_advance_token(parser->lexer);
+    if (parser->token_offset >= parser->tokens->len)
+    {
+        return;
+    }
 
     parser->token_offset++;
-
-    array_append(parser->tokens, &token);
-
-    if (token.type == TK_ERROR)
-    {
-        parser_set_error(parser, "problem found while lexing source", PARSE_LEX_ERR);
-    }
 }
 
 Expr *parser_expr(Parser *parser);
@@ -105,7 +101,7 @@ bool _parser_match(Parser *parser, int count, ...)
     {
         int type = va_arg(args, int);
 
-        if (current->type == type)
+        if (current->type == type && parser->token_offset < parser->tokens->len)
         {
             parser_advance(parser);
             matched = true;
@@ -123,22 +119,18 @@ bool _parser_match(Parser *parser, int count, ...)
 
 #define GENERATE_BINARY_EXPR_PROC(rule, ...)    \
 Expr *expr = rule(parser);                      \
-                                                \
 while (PARSER_MATCH(parser, __VA_ARGS__))       \
 {                                               \
     Token *operator = parser_previous(parser);  \
                                                 \
     Expr *right = rule(parser);                 \
                                                 \
-    BinaryExpr binary =                         \
-    {                                           \
-        .left = expr,                           \
-        .operator = operator,                   \
-        .right = right                          \
-    };                                          \
-                                                \
-    expr->type = EXPR_BINARY;                   \
-    expr->as.binary = binary;                    \
+    Expr *new_expr = malloc(sizeof(Expr));      \
+    new_expr->type = EXPR_BINARY;               \
+    new_expr->as.binary.left = expr;            \
+    new_expr->as.binary.operator = operator;    \
+    new_expr->as.binary.right = right;          \
+    expr = new_expr;                            \
 }                                               \
                                                 \
 return expr;                                    \
@@ -161,7 +153,7 @@ Expr* parser_primary(Parser *parser)
     else if (PARSER_MATCH(parser, TK_STRING, TK_INT, TK_FLOAT))
     {
         Expr *expr = malloc(sizeof(Expr));
-        expr->as.literal.value = parser_current(parser);
+        expr->as.literal.value = parser_previous(parser);
         expr->type = EXPR_LITERAL;
         return expr;
     }
@@ -181,7 +173,7 @@ Expr* parser_primary(Parser *parser)
 
 Expr* parser_unary(Parser *parser)
 {
-    while (PARSER_MATCH(parser, TK_BANG_EQUAL, TK_MINUS))
+    if (PARSER_MATCH(parser, TK_BANG, TK_MINUS))
     {
         Token *operator = parser_previous(parser);
 
@@ -259,9 +251,9 @@ void parse(Parser *parser)
     parser->error_message = NULL;
     parser->token_offset = 0;
 
+
     parser->root = parser_expr(parser);
 
-    printf("%d\n", parser->root->type);
 
     // while (parser->token_offset < parser->tokens->len)
     // {
