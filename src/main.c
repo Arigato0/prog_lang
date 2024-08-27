@@ -18,7 +18,7 @@ void make_tokens(Lexer *lexer, Array *out_tokens)
         if (token.type == TK_ERROR)
         {
             fprintf(stderr, "Error while lexing (%d:%d): %s\n",
-            token.line, token.column, token.str_value);
+            token.line, token.column, token.str);
 
             exit(-1);
         }
@@ -72,19 +72,20 @@ void print_ast(Expr *root, int depth)
         break;
     case EXPR_BINARY:  
     {
-        printf("%s:\n", root->as.binary.operator->str_value);
+        printf("%s:\n", root->as.binary.operator->str);
         print_ast(root->as.binary.left, depth);
         print_ast(root->as.binary.right, depth);
         break;
     }
     case EXPR_LITERAL:
-        printf("%s:\n", root->as.literal.value->str_value);
+        printf("%s:\n", root->as.literal.value->str);
         break;
     case EXPR_UNARY:
-        printf("%s:\n", root->as.unary.operator->str_value);
+        printf("%s:\n", root->as.unary.operator->str);
         print_ast(root->as.unary.right, depth);
         break;
     case EXPR_IDENTIFIER:
+        printf("%s\n", root->as.identifier.name->str);
       break;
     }
 }

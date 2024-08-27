@@ -46,7 +46,7 @@ static const char *TK_STRING_TABLE[] =
 typedef struct
 {
     TOKEN_TYPE type;
-    const char *str_value;
+    const char *str;
     int line;
     int column;
 } Token;

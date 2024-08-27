@@ -5,6 +5,12 @@
 
 typedef struct Expr Expr;
 
+typedef struct
+{
+    Token *name;
+    Array args;
+} CallExpr;
+
 // represents a single expression which is useful for things like grouping
 typedef struct
 {
@@ -46,6 +52,14 @@ typedef struct
     char *message;
 } ErrorExpr;
 
+// a generic struct for both assigning and declaring a variable
+// inside an expression its always assignment however in statements its always a declaretion
+typedef struct 
+{
+    Token *name;
+    Expr *value;
+} VarPair;
+
 struct Expr
 {
     enum
@@ -56,6 +70,8 @@ struct Expr
         EXPR_UNARY,
         EXPR_IDENTIFIER,
         EXPR_SINGLE,
+        EXPR_ASSIGN,
+        EXPR_CALL,
     } type;
 
     union
@@ -66,6 +82,8 @@ struct Expr
         LiteralExpr literal;
         IdentifierExpr identifier;
         SingleExpr single;
+        VarPair assign;
+        CallExpr call;
     } as;
 
 };
@@ -76,9 +94,14 @@ static const Expr NIL_LITERAL = { .as.literal.value = (void*)0, .type = EXPR_LIT
 
 typedef struct
 {
+    enum 
+    {
+        STMT_VAR
+    } type;
+
     union
     {
-        Array block;
+        VarPair var;
     } as;
 } Stmt;
 

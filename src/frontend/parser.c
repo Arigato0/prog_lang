@@ -59,7 +59,7 @@ bool parser_equals(Parser *parser, TOKEN_TYPE type)
 
 bool parser_expect(Parser *parser, TOKEN_TYPE type, char *message)
 {
-    if (parser_equals(parser, type))
+    if (!parser_equals(parser, type))
     {
         // TODO: make this error message actually useful
         parser_set_error(parser, message, PARSE_ERR);
@@ -170,6 +170,38 @@ Expr* parser_primary(Parser *parser)
 
         return inside_expr;
     }
+    else if (PARSER_MATCH(parser, TK_IDENTIFIER))
+    {
+        Token *identifier = parser_previous(parser);
+        Expr *expr = malloc(sizeof(Expr));
+
+        if (PARSER_MATCH(parser, TK_LEFT_BRACKET))
+        {
+            expr->as.call.name = identifier;
+            expr->type = EXPR_CALL;
+
+            array_new(&expr->as.call.args, sizeof(Expr));
+
+            do 
+            {
+                Expr *arg = parser_expr(parser);
+                array_append(&expr->as.call.args, arg);
+            } while (PARSER_MATCH(parser, TK_COMMA));
+
+            parser_expect(parser, TK_RIGHT_BRACKET, "expected a ) to close off function call");
+        }
+        else  
+        {
+            expr->as.identifier.name = identifier;
+            expr->type = EXPR_IDENTIFIER;
+        }
+
+        return expr;
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 Expr* parser_unary(Parser *parser)
@@ -236,14 +268,17 @@ Expr* parser_function(Parser *parser)
     return parser_equality(parser);
 }
 
-Expr* parser_stmt(Parser *parser)
+Expr *parser_expr(Parser *parser)
 {
     return parser_equality(parser);
 }
 
-Expr *parser_expr(Parser *parser)
+Expr* parser_stmt(Parser *parser)
 {
-    return parser_equality(parser);
+    if (PARSER_MATCH(parser, TK_IDENTIFIER))
+    {
+
+    }
 }
 
 void parse(Parser *parser)

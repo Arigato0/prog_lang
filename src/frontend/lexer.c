@@ -3,6 +3,7 @@
 #include "ds/trie.h"
 
 #include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <alloca.h>
+#include <sys/types.h>
 
 void lexer_new(Lexer *lexer)
 {
@@ -24,7 +26,7 @@ Token lexer_new_error(Lexer *lexer, const char *error)
     Token out =
     {
         .type = TK_ERROR,
-        .str_value = error,
+        .str = error,
         .line = lexer->current_line,
         .column = lexer->current_column,
     };
@@ -32,24 +34,27 @@ Token lexer_new_error(Lexer *lexer, const char *error)
     return out;
 }
 
+void copy(char *dest, char *src, size_t len)
+{
+
+}
+
 Token lexer_build_token(Lexer *lexer, TOKEN_TYPE type)
 {
-    int token_len = lexer->off - lexer->start;
+    int len = lexer->off - lexer->start;
 
-    char *substr = malloc(token_len+1);
+    char *substr = malloc(len+1);
 
-    strncpy(substr, lexer->src + lexer->start, token_len);
-
-    substr[token_len] = '\0';
+    strncpy(substr, lexer->src + lexer->start, len);
 
     Token out =
     {
         .type = type,
-        .str_value = substr,
+        .str = substr,
         .line = lexer->current_line,
         .column = lexer->current_column
     };
-
+   
     lexer->start = lexer->off;
     lexer->last_token = type;
     lexer->indent_level = 0;
@@ -60,7 +65,7 @@ Token lexer_build_token(Lexer *lexer, TOKEN_TYPE type)
 
 int token_get_string_size(Token *token)
 {
-    int str_size = token->type == TK_INDENT ? sizeof(int) : strlen(token->str_value);
+    int str_size = token->type == TK_INDENT ? sizeof(int) : strlen(token->str);
 
     return
     strlen(TK_STRING_TABLE[token->type])
@@ -76,11 +81,11 @@ void token_to_string(Token *token, char *buffer)
         return;
     }
 
-    char *value = token->str_value;
+    char *value = token->str;
 
     if (token->type == TK_INDENT)
     {
-        int n = (int)token->str_value;
+        int n = (int)token->str;
         value = alloca(26);
         sprintf(value, "%d", n);
     }
@@ -212,7 +217,7 @@ while_end:
     if (indent > 0 && !lexer->in_middle)
     {
         Token indent_tk = lexer_build_token(lexer, TK_INDENT);
-        indent_tk.str_value = (char*)indent;
+        indent_tk.str = (char*)indent;
         return indent_tk;
     }
 
@@ -266,7 +271,7 @@ Token lexer_build_id(Lexer *lexer)
 
     Token token = lexer_build_token(lexer, TK_IDENTIFIER);
 
-    TOKEN_TYPE tk_type = trie_match(lexer->keyword_tree, token.str_value);
+    TOKEN_TYPE tk_type = trie_match(lexer->keyword_tree, token.str);
 
     if (tk_type != 0)
     {
@@ -364,7 +369,7 @@ Token lexer_advance_token(Lexer *lexer)
             Token eof =
             {
                 .type = TK_EOF,
-                .str_value = "EOF",
+                .str = "EOF",
                 .line = lexer->current_line,
                 .column = lexer->current_column
             };
