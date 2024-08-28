@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:os"
 import "core:log"
 import "frontend/lexer"
+import "frontend/parser"
 
 build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
 {
@@ -12,7 +13,16 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
     lex.keywords = 
     { 
         "struct" = .Struct,
-        "fn" = .Fn
+        "fn" = .Fn,
+        "for" = .For,
+        "while" = .While,
+        "if" = .If,
+        "else" = .Else,
+        "nil" = .Nil,
+        "true" = .True,
+        "false" = .False,
+        "return" = .Return,
+        "pass" = .Pass
     }
 
     for true 
@@ -68,4 +78,13 @@ main :: proc()
     if tokens == nil do return 
 
     print_tokens(tokens)
+
+    expr := parser.Expr{}
+    expr = parser.BinaryExpr {
+        left = new(parser.Expr), 
+        operator = &tokens[0], 
+        right = new(parser.Expr)
+    }
+
+    fmt.println(expr)
 }
