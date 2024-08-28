@@ -5,29 +5,67 @@ import "core:os"
 import "core:log"
 import "frontend/lexer"
 
-main :: proc() 
+build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
 {
-    contents, ok := os.read_entire_file("./tests/tokens.prog")
+    lex := lexer.create(source)
 
-    if !ok do log.fatal("could not read source file")
-
-    lex := lexer.create(cast(string)contents)
-
-    token: lexer.Token 
+    lex.keywords = 
+    { 
+        "struct" = .Struct,
+        "fn" = .Fn
+    }
 
     for true 
     {
-        token = lexer.advance_token(&lex)
+        token := lexer.advance_token(&lex)
 
         if token.type == .Error {
-            log.fatalf("error while lexing ({}:{}): {}", token.line, token.column, token.value)
+            fmt.printfln("error while lexing ({}:{}): {}", token.line, token.column, token.value)
+            return nil
         }
 
-        fmt.println(token)
+        append(&out, token)
 
         if token.type == .Eof 
         {
             break
         }
     }
+
+    return out
+}
+
+print_tokens :: proc(tokens: [dynamic]lexer.Token)
+{
+    for &token in tokens 
+    {
+        value: any = token.value
+
+        #partial switch _ in token.value 
+        {
+            case []byte: value = transmute(string) token.value.([]byte)
+        }
+
+        fmt.printfln("{}({}, {}:{})", 
+        token.type, value, token.line, token.column)
+    }
+}
+
+main :: proc() 
+{
+    contents, ok := os.read_entire_file("./tests/tokens.prog")
+
+    if !ok 
+    {
+        fmt.println("could not read source file")
+        return
+    }
+
+    tokens := build_tokens(contents)
+
+    defer delete(tokens)
+
+    if tokens == nil do return 
+
+    print_tokens(tokens)
 }

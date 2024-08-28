@@ -1,19 +1,23 @@
 package lexer
 
-import "core:fmt"
+import "core:unicode"
 
 TokenType :: enum 
 {
     Error,
     Indent,
-	Plus,
-	Minus,
-	ForwardSlash,
-	Star,
+	Plus, Minus, ForwardSlash, Star,
+    Float, Int, Identifier, String,
+    Equal, EqualEqual, Less, Greater, 
+    LessEqual, GreaterEqual, BangEqual,
+    LeftParen, RightParen, LeftBrace, RightBrace, LeftBrack, RightBrack,
+    Dot, Comma, Arrow, Bang, ColonEqual, Colon, ColonColon,
+    True, False, Nil, Return, Pass, 
+    Struct, Fn, For, While, If, Else, In,
     Eof,
 }
 
-TokenValue :: union #no_nil {string, int}
+TokenValue :: union #no_nil {[]byte, int}
 
 Token :: struct 
 {
@@ -25,16 +29,17 @@ Token :: struct
 
 Lexer :: struct 
 {
-    source:    string,
+    source:    []byte,
 	current:   int,
 	offset:    int,
     column:    int,
     line:      int,
     indent:    int,
-    in_middle: bool
+    in_middle: bool,
+    keywords:  map[string]TokenType,
 }
 
-create :: proc(source: string) -> (out: Lexer )
+create :: proc(source: []byte) -> (out: Lexer )
 {
     out.line = 1
     out.source = source
@@ -44,7 +49,7 @@ create :: proc(source: string) -> (out: Lexer )
 
 advance_token :: proc(lexer: ^Lexer) -> Token 
 {
-    if lexer == nil || lexer.source == "" {
+    if lexer == nil || lexer.source == nil {
         return make_error(lexer, "either lexer or source string is nil or empty")
     }
 
@@ -62,7 +67,28 @@ advance_token :: proc(lexer: ^Lexer) -> Token
         case '-': return build_token(lexer, .Minus)
         case '/': return build_token(lexer, .ForwardSlash)
         case '*': return build_token(lexer, .Star)
+        case '(': return build_token(lexer, .LeftParen)
+        case ')': return build_token(lexer, .RightParen)
+        case '.': return build_token(lexer, .Dot)
+        case '[': return build_token(lexer, .LeftBrack)
+        case ']': return build_token(lexer, .RightBrack)
+        case ',': return build_token(lexer, .Comma)
+        case '=': return build_or_else(lexer, '=', .EqualEqual, .Equal)
+        case '<': return build_or_else(lexer, '=', .LessEqual, .Less)
+        case '>': return build_or_else(lexer, '=', .GreaterEqual, .Greater)
+        case '!': return build_or_else(lexer, '=', .BangEqual, .Bang)
+        case '\'': fallthrough
+        case '"': return build_string(lexer)
+        case ':':
+            if match(lexer, '=') do return build_token(lexer, .ColonEqual)
+
+            else if match(lexer, ':') do return build_token(lexer, .ColonColon)
+
+            else do return build_token(lexer, .Colon)
         case 0:   return build_token(lexer, .Eof)
+        case:
+            if unicode.is_digit(cast(rune)c) do return build_digit(lexer)
+            else if is_identifier(c) do return build_identifier(lexer)
     }
 
     return make_error(lexer, "unknown character found")

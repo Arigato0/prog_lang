@@ -1,3 +1,4 @@
-+ * / -
-    + - 
-/
+fn my_func(x):
+    print(x)
+
+my_func(10)
