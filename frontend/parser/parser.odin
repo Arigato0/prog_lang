@@ -22,7 +22,7 @@ GroupingExpr :: struct
 
 LiteralExpr :: struct 
 {
-    value: ^lexer.Token
+    value: any
 }
 
 IdentifierExpr :: struct 
