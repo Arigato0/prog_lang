@@ -2,6 +2,7 @@
 package parser
 
 import "../lexer"
+import "core:fmt"
 
 
 binary_rule :: #force_inline proc(using parser: ^Parser, rule: proc(^Parser) -> ^Expr, types: ..lexer.TokenType) -> ^Expr
@@ -11,14 +12,17 @@ binary_rule :: #force_inline proc(using parser: ^Parser, rule: proc(^Parser) -> 
     for match_token(parser, ..types) 
     {
         operator := previous_token(parser)
-        left := expr
         right := rule(parser)
+        
+        new_expr := new(Expr)
 
-        binary := &expr.(BinaryExpr) 
+        new_expr^ = BinaryExpr {
+            left = expr,
+            operator = operator,
+            right = right,
+        }
 
-        binary.left = left
-        binary.operator = operator
-        binary.right = right
+        expr = new_expr
     }
 
     return expr
@@ -28,16 +32,40 @@ primary :: proc(using parser: ^Parser) -> ^Expr
 {
     expr := new(Expr)
 
-    #partial switch tokens[token_offset].type
+    if match_token(parser, .True)
     {
-    case .True: 
         expr^ = LiteralExpr{true}
-    case .False:
+    }
+    else if match_token(parser, .False)
+    {
         expr^ = LiteralExpr{false}
-    case .Nil:
-        expr^ = LiteralExpr{nil}
-    case .Int, .Float, .String:
-        expr^ = LiteralExpr{previous_token(parser)}
+    }
+    else if match_token(parser, .Int, .Float, .String)
+    {
+        previous := previous_token(parser)
+        expr^ = LiteralExpr{previous}
+    }
+    else if match_token(parser, .Identifier)
+    {
+        previous := previous_token(parser)
+        expr^ = IdentifierExpr{previous}
+    }
+    else if match_token(parser, .LeftParen)
+    {
+        inside := expression(parser)
+
+        ok := expect_token(parser, .RightParen, "expected matching closing parenthesis")
+
+        if !ok 
+        {
+            free(expr)
+            return nil
+        }
+
+        expr^ = GroupingExpr {
+            inside = inside
+        }
+
     }
 
     return expr
@@ -50,10 +78,13 @@ unary :: proc(using parser: ^Parser) -> ^Expr
         operator := previous_token(parser)
         expr := unary(parser)
 
-        unary := &expr.(UnaryExpr) 
+        unary := new(Expr) 
+        unary^ = UnaryExpr {
+            operator = operator,
+            right = expr
+        }
 
-        unary.right = expr
-        unary.operator = operator
+        return unary
     }
 
     return primary(parser)

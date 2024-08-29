@@ -1,4 +1,1 @@
-fn my_func(x):
-    print(x)
-
-my_func(10)
+(5 + -a) / 39

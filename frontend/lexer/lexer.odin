@@ -47,6 +47,17 @@ create :: proc(source: []byte) -> (out: Lexer )
     return out
 }
 
+get_token_string :: #force_inline proc(using token: ^Token) -> string 
+{
+    #partial switch v in value 
+    {
+    case []byte:
+        return transmute(string)v
+    case:
+        return ""
+    }
+}
+
 advance_token :: proc(lexer: ^Lexer) -> Token 
 {
     if lexer == nil || lexer.source == nil {

@@ -20,9 +20,11 @@ GroupingExpr :: struct
     inside: ^Expr
 }
 
+Literal :: union {^lexer.Token, bool}
+
 LiteralExpr :: struct 
 {
-    value: any
+    value: Literal
 }
 
 IdentifierExpr :: struct 
@@ -51,6 +53,8 @@ Parser :: struct
     root_expr: ^Expr,
     token_offset: int,
     tokens: []lexer.Token,
+    // empty if nothing went wrong
+    error_message: string
 }
 
 parse_tokens :: proc(tokens: []lexer.Token) -> ^Expr 
