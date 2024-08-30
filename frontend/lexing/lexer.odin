@@ -1,4 +1,4 @@
-package lexer
+package lexing
 
 import "core:unicode"
 

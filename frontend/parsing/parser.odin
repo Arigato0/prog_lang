@@ -1,25 +1,25 @@
-package parser
+package parsing
 
-import "../lexer"
+import "../lexing"
 import "core:fmt"
 
 
 Error :: struct 
 {
     message: string,
-    token: ^lexer.Token
+    token: ^lexing.Token
 }
 
 BinaryExpr :: struct
 {
     left: ^Expr,
-    operator: ^lexer.Token,
+    operator: ^lexing.Token,
     right: ^Expr,
 }
 
 UnaryExpr :: struct
 {
-    operator: ^lexer.Token,
+    operator: ^lexing.Token,
     right: ^Expr,
 }
 
@@ -28,7 +28,7 @@ GroupingExpr :: struct
     inside: ^Expr
 }
 
-Literal :: union {^lexer.Token, bool}
+Literal :: union {^lexing.Token, bool}
 
 LiteralExpr :: struct 
 {
@@ -37,12 +37,12 @@ LiteralExpr :: struct
 
 IdentifierExpr :: struct 
 {
-    name: ^lexer.Token
+    name: ^lexing.Token
 }
 
 VarPair :: struct 
 {
-    name: ^lexer.Token,
+    name: ^lexing.Token,
     value: ^Expr
 }
 
@@ -60,7 +60,7 @@ Parser :: struct
 {
     token_offset: int,
     root: ^Expr,
-    tokens: []lexer.Token,
+    tokens: []lexing.Token,
     error: Maybe(Error)
 }
 
@@ -82,7 +82,7 @@ free_expr :: proc(root: ^Expr)
     free(root)
 }
 
-parse_tokens :: proc(tokens: []lexer.Token) -> Parser 
+parse_tokens :: proc(tokens: []lexing.Token) -> Parser 
 {
     parser := Parser { tokens = tokens }
 

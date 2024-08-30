@@ -1,28 +1,28 @@
 // +private package
-package parser 
+package parsing 
 
-import "../lexer"
+import "../lexing"
 
 at_end :: proc(using parser: ^Parser) -> bool
 {
     return token_offset >= len(tokens)
 }
 
-check_token :: proc(using parser: ^Parser, type: lexer.TokenType) -> bool
+check_token :: proc(using parser: ^Parser, type: lexing.TokenType) -> bool
 {
    if at_end(parser) do return false 
 
    return tokens[token_offset].type == type
 }
 
-previous_token :: proc(using parser: ^Parser) -> ^lexer.Token
+previous_token :: proc(using parser: ^Parser) -> ^lexing.Token
 {
     if token_offset - 1 < 0 do return &tokens[0]
 
     return &tokens[token_offset-1]
 }
 
-current_token :: proc(using parser: ^Parser) -> ^lexer.Token
+current_token :: proc(using parser: ^Parser) -> ^lexing.Token
 {
     if at_end(parser) do return nil
 
@@ -37,7 +37,7 @@ advance :: proc(using parser: ^Parser)
     token_offset += 1
 }
 
-match_token :: proc(using parser: ^Parser, types: ..lexer.TokenType) -> bool
+match_token :: proc(using parser: ^Parser, types: ..lexing.TokenType) -> bool
 {
     for type in types 
     {
@@ -59,7 +59,7 @@ set_error :: proc(using parser: ^Parser, message: string)
     }
 }
 
-expect_token :: proc(using parser: ^Parser, type: lexer.TokenType, message: string) -> bool
+expect_token :: proc(using parser: ^Parser, type: lexing.TokenType, message: string) -> bool
 {
     if (match_token(parser, type)) do return false
     

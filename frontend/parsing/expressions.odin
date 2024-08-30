@@ -1,12 +1,12 @@
 // +private package
-package parser
+package parsing
 
-import "../lexer"
+import "../lexing"
 import "core:fmt"
 
 Rule :: proc(^Parser) -> ^Expr
 
-binary_rule :: #force_inline proc(using parser: ^Parser, rule: Rule, types: ..lexer.TokenType) -> ^Expr
+binary_rule :: #force_inline proc(using parser: ^Parser, rule: Rule, types: ..lexing.TokenType) -> ^Expr
 {
     expr := rule(parser)
 

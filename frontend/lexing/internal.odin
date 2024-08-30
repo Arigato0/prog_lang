@@ -1,5 +1,5 @@
 // +private package
-package lexer
+package lexing
 
 import "core:strings"
 import "core:unicode"

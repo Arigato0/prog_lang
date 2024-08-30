@@ -3,20 +3,21 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:log"
-import "frontend/lexer"
-import "frontend/parser"
+import "frontend/lexing"
+import "frontend/parsing"
 import "base:intrinsics"
 import "core:mem"
+import "base:runtime"
 
 PRINT_TOKENS :: #config(DEBUG_TOKENS, false)
 PRINT_AST :: #config(DEBUG_AST, false)
 TRACK_ALLOCS :: #config(DEBUG_MEMORY, false)
 
-build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
+build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
 {
-    lex := lexer.create(source)
+    lexer := lexing.create(source)
 
-    lex.keywords = 
+    lexer.keywords = 
     { 
         "struct" = .Struct,
         "fn" = .Fn,
@@ -31,11 +32,11 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
         "pass" = .Pass
     }
 
-    defer delete(lex.keywords)
+    defer delete(lexer.keywords)
 
     for true 
     {
-        token := lexer.advance_token(&lex)
+        token := lexing.advance_token(&lexer)
 
         if token.type == .Error {
             fmt.printfln("error while lexing ({}:{}): {}", token.line, token.column, token.value)
@@ -53,7 +54,7 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
     return out
 }
 
-print_tokens :: proc(tokens: [dynamic]lexer.Token)
+print_tokens :: proc(tokens: [dynamic]lexing.Token)
 {
     for &token in tokens 
     {
@@ -69,36 +70,36 @@ print_tokens :: proc(tokens: [dynamic]lexer.Token)
     }
 }
 
-print_literal :: proc(literal: parser.Literal)
+print_literal :: proc(literal: parsing.Literal)
 {
     #partial switch v in literal 
     {
-    case ^lexer.Token:
-        fmt.print(lexer.get_token_string(v))
+    case ^lexing.Token:
+        fmt.print(lexing.get_token_string(v))
     case:
         fmt.print(v)
     }
 }
 
-print_ast :: proc(root: ^parser.Expr)
+print_ast :: proc(root: ^parsing.Expr)
 {
     #partial switch v in root 
     {
-    case parser.BinaryExpr:
-        fmt.printf("({} ", lexer.get_token_string(v.operator))
+    case parsing.BinaryExpr:
+        fmt.printf("({} ", lexing.get_token_string(v.operator))
         print_ast(v.left)
         print_ast(v.right)
         fmt.print(")")
-    case parser.UnaryExpr:
-        fmt.printf("({} ", lexer.get_token_string(v.operator))
+    case parsing.UnaryExpr:
+        fmt.printf("({} ", lexing.get_token_string(v.operator))
         print_ast(v.right)
         fmt.print(")")
-    case parser.LiteralExpr:
+    case parsing.LiteralExpr:
         print_literal(v.value)
-    case parser.GroupingExpr:
+    case parsing.GroupingExpr:
         print_ast(v.inside)
-    case parser.IdentifierExpr:
-        fmt.print(lexer.get_token_string(v.name))
+    case parsing.IdentifierExpr:
+        fmt.print(lexing.get_token_string(v.name))
     }
 
     fmt.print(" ")
@@ -164,20 +165,20 @@ main :: proc()
     
     when PRINT_TOKENS do print_tokens(tokens)
 
-    p := parser.parse_tokens(tokens[:])
+    parser := parsing.parse_tokens(tokens[:])
 
-    defer parser.free_expr(p.root)
+    defer parsing.free_expr(parser.root)
 
-    if err, had_err := p.error.?; had_err
+    if err, had_err := parser.error.?; had_err
     {
         fmt.printfln("error while parsing '{}' ({}:{}) {}", 
-            lexer.get_token_string(err.token), err.token.line, err.token.column, err.message)
+            lexing.get_token_string(err.token), err.token.line, err.token.column, err.message)
         return
     }
 
     when PRINT_AST 
     {
-        print_ast(p.root)
+        print_ast(parser.root)
         fmt.println()
     }
 
