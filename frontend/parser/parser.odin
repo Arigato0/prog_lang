@@ -64,6 +64,24 @@ Parser :: struct
     error: Maybe(Error)
 }
 
+free_expr :: proc(root: ^Expr)
+{
+    #partial switch v in root 
+    {
+    case BinaryExpr:
+        free_expr(v.left)
+        free_expr(v.right)
+    case UnaryExpr:
+        free(v.right)
+    case GroupingExpr:
+        free_expr(v.inside)
+    case VarPair:
+        free_expr(v.value)
+    }
+
+    free(root)
+}
+
 parse_tokens :: proc(tokens: []lexer.Token) -> Parser 
 {
     parser := Parser { tokens = tokens }

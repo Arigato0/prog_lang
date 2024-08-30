@@ -33,7 +33,7 @@ primary :: proc(using parser: ^Parser) -> ^Expr
 {
     expr := new(Expr)
 
-    defer if _, has_value := expr.(BinaryExpr); !has_value 
+    defer if expr == nil
     {
         free(expr)
     }
@@ -75,7 +75,7 @@ primary :: proc(using parser: ^Parser) -> ^Expr
     else 
     {
         set_error(parser, "expected value")
-        return nil
+        expr = nil
     }
 
     return expr

@@ -5,7 +5,12 @@ import "core:os"
 import "core:log"
 import "frontend/lexer"
 import "frontend/parser"
-import "util"
+import "base:intrinsics"
+import "core:mem"
+
+PRINT_TOKENS :: #config(DEBUG_TOKENS, false)
+PRINT_AST :: #config(DEBUG_AST, false)
+TRACK_ALLOCS :: #config(DEBUG_MEMORY, false)
 
 build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
 {
@@ -25,6 +30,8 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
         "return" = .Return,
         "pass" = .Pass
     }
+
+    defer delete(lex.keywords)
 
     for true 
     {
@@ -75,8 +82,6 @@ print_literal :: proc(literal: parser.Literal)
 
 print_ast :: proc(root: ^parser.Expr)
 {
-    fmt.print(" ")
-
     #partial switch v in root 
     {
     case parser.BinaryExpr:
@@ -95,11 +100,55 @@ print_ast :: proc(root: ^parser.Expr)
     case parser.IdentifierExpr:
         fmt.print(lexer.get_token_string(v.name))
     }
+
+    fmt.print(" ")
+}
+
+print_unfreed_memory :: proc(tracking_alloc: ^mem.Tracking_Allocator)
+{
+    alloc_size := len(tracking_alloc.allocation_map)
+
+    if alloc_size > 0
+    {
+        unfreed_size := tracking_alloc.total_memory_allocated - tracking_alloc.total_memory_freed
+
+        fmt.printfln("{} entries ({}B) unfreed:", alloc_size, unfreed_size)
+
+        for _, entry in tracking_alloc.allocation_map
+        {
+            fmt.printfln("\t({}) {}", entry.size, entry.location)
+        }
+    }
+
+    bad_free_size := len(tracking_alloc.bad_free_array)
+
+    if bad_free_size > 0
+    {
+        fmt.printfln("{} bad frees:", bad_free_size)
+
+        for entry in tracking_alloc.bad_free_array
+        {
+            fmt.printfln("\t({}) {}", entry.memory, entry.location)
+        }
+    }
 }
 
 main :: proc() 
 {
+    when TRACK_ALLOCS 
+    {
+        tracking_alloc: mem.Tracking_Allocator
+
+        mem.tracking_allocator_init(&tracking_alloc, context.allocator)
+
+        context.allocator = mem.tracking_allocator(&tracking_alloc)
+
+        defer print_unfreed_memory(&tracking_alloc)
+    }
+
     contents, ok := os.read_entire_file("./examples/parsing.prog")
+
+    defer delete(contents)
 
     if !ok 
     {
@@ -111,11 +160,13 @@ main :: proc()
 
     defer delete(tokens)
 
-    if tokens == nil do return 
-
-    print_tokens(tokens)
+    if tokens == nil do return
+    
+    when PRINT_TOKENS do print_tokens(tokens)
 
     p := parser.parse_tokens(tokens[:])
+
+    defer parser.free_expr(p.root)
 
     if err, had_err := p.error.?; had_err
     {
@@ -124,7 +175,10 @@ main :: proc()
         return
     }
 
-    print_ast(p.root)
+    when PRINT_AST 
+    {
+        print_ast(p.root)
+        fmt.println()
+    }
 
-    fmt.println()
 }
