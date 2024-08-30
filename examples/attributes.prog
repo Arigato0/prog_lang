@@ -1,0 +1,28 @@
+
+# a good practical use case for attributes and how the selection syntax can be applied to a database
+@http_get("/pizza/menu")
+fn get_pizza_menu(ctx):
+    menu := select menu from ctx.db where menu.id == "pizza
+    return menu
+
+@special_function
+fn my_special_function():
+    pass
+
+# using reflections can find all data that an attribute is attatched to
+all_special_functions := reflections.get_package().all_attr(@special_function)
+
+for special_function in all_special_functions:
+    special_function()
+
+# custom attribute
+# attributes should use the same naming convention as functions because in practice they are used in the same way by the user
+attr meta_data:
+    init(name, description)
+
+    fn print_meta():
+        println(f"{name}: {description}")
+
+@meta_data("user_class", "holds a record of a user")
+struct User:
+    pass

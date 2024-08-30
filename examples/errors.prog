@@ -1,0 +1,34 @@
+
+fn divide(a, b):
+    if (a or b) == 0:
+        return Error("cant divide by zero")
+    return a / b
+
+result := divide(10, 0)
+
+if result is Error:
+    println(result.what())
+else:
+    println(result)
+
+fn propagate():
+    # if any of the returned values of do_stuff is an error it will return the error to the caller
+    value := do_stuff() or_return
+
+    # continue function
+
+    # can directly specify the returned value and in this context when give the type of Error it will space the error in that position
+    other_value := do_more_stuff() or_return -1, Error
+
+# a way to define your own error type
+error MyError:
+    init(message, code)
+
+    # all error types must have a defined what method or else a compile time error will be raised
+    fn what():
+        return f"({code}) {message}"
+
+result := do_stuff()
+
+if result is MyError:
+    pass

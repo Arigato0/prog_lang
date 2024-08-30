@@ -51,11 +51,19 @@ match_token :: proc(using parser: ^Parser, types: ..lexer.TokenType) -> bool
     return false
 }
 
+set_error :: proc(using parser: ^Parser, message: string)
+{
+    error = Error {
+        message,
+        previous_token(parser)
+    }
+}
+
 expect_token :: proc(using parser: ^Parser, type: lexer.TokenType, message: string) -> bool
 {
-    if (match_token(parser, type)) do return true
+    if (match_token(parser, type)) do return false
     
-    error_message = message
+    set_error(parser, message)
 
     return false
 }

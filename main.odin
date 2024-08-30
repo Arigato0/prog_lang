@@ -5,6 +5,7 @@ import "core:os"
 import "core:log"
 import "frontend/lexer"
 import "frontend/parser"
+import "util"
 
 build_tokens :: proc(source: []byte) -> (out: [dynamic]lexer.Token)
 {
@@ -98,7 +99,7 @@ print_ast :: proc(root: ^parser.Expr)
 
 main :: proc() 
 {
-    contents, ok := os.read_entire_file("./tests/tokens.prog")
+    contents, ok := os.read_entire_file("./examples/parsing.prog")
 
     if !ok 
     {
@@ -114,15 +115,16 @@ main :: proc()
 
     print_tokens(tokens)
 
-    root := parser.parse_tokens(tokens[:])
+    p := parser.parse_tokens(tokens[:])
 
-    if root == nil
+    if err, had_err := p.error.?; had_err
     {
-        fmt.println("root node was nil")
+        fmt.printfln("error while parsing '{}' ({}:{}) {}", 
+            lexer.get_token_string(err.token), err.token.line, err.token.column, err.message)
         return
     }
 
-    print_ast(root)
+    print_ast(p.root)
 
     fmt.println()
 }

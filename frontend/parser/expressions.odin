@@ -4,8 +4,9 @@ package parser
 import "../lexer"
 import "core:fmt"
 
+Rule :: proc(^Parser) -> ^Expr
 
-binary_rule :: #force_inline proc(using parser: ^Parser, rule: proc(^Parser) -> ^Expr, types: ..lexer.TokenType) -> ^Expr
+binary_rule :: #force_inline proc(using parser: ^Parser, rule: Rule, types: ..lexer.TokenType) -> ^Expr
 {
     expr := rule(parser)
 
@@ -13,7 +14,7 @@ binary_rule :: #force_inline proc(using parser: ^Parser, rule: proc(^Parser) -> 
     {
         operator := previous_token(parser)
         right := rule(parser)
-        
+
         new_expr := new(Expr)
 
         new_expr^ = BinaryExpr {
@@ -31,6 +32,11 @@ binary_rule :: #force_inline proc(using parser: ^Parser, rule: proc(^Parser) -> 
 primary :: proc(using parser: ^Parser) -> ^Expr 
 {
     expr := new(Expr)
+
+    defer if _, has_value := expr.(BinaryExpr); !has_value 
+    {
+        free(expr)
+    }
 
     if match_token(parser, .True)
     {
@@ -56,9 +62,8 @@ primary :: proc(using parser: ^Parser) -> ^Expr
 
         ok := expect_token(parser, .RightParen, "expected matching closing parenthesis")
 
-        if !ok 
+        if !ok
         {
-            free(expr)
             return nil
         }
 
@@ -66,6 +71,11 @@ primary :: proc(using parser: ^Parser) -> ^Expr
             inside = inside
         }
 
+    }
+    else 
+    {
+        set_error(parser, "expected value")
+        return nil
     }
 
     return expr
@@ -76,7 +86,7 @@ unary :: proc(using parser: ^Parser) -> ^Expr
     if match_token(parser, .Bang, .Minus) 
     {
         operator := previous_token(parser)
-        expr := unary(parser)
+        expr := unary(parser) 
 
         unary := new(Expr) 
         unary^ = UnaryExpr {

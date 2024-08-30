@@ -1,6 +1,14 @@
 package parser
 
 import "../lexer"
+import "core:fmt"
+
+
+Error :: struct 
+{
+    message: string,
+    token: ^lexer.Token
+}
 
 BinaryExpr :: struct
 {
@@ -40,28 +48,27 @@ VarPair :: struct
 
 Expr :: union 
 {
-   BinaryExpr,
-   UnaryExpr,
-   GroupingExpr,
-   LiteralExpr,
-   IdentifierExpr,
-   VarPair,
+    BinaryExpr,
+    UnaryExpr,
+    GroupingExpr,
+    LiteralExpr,
+    IdentifierExpr,
+    VarPair,
 }
 
 Parser :: struct 
 {
-    root_expr: ^Expr,
     token_offset: int,
+    root: ^Expr,
     tokens: []lexer.Token,
-    // empty if nothing went wrong
-    error_message: string
+    error: Maybe(Error)
 }
 
-parse_tokens :: proc(tokens: []lexer.Token) -> ^Expr 
+parse_tokens :: proc(tokens: []lexer.Token) -> Parser 
 {
-    parser := Parser{ tokens = tokens }
+    parser := Parser { tokens = tokens }
 
-    parser.root_expr = expression(&parser)
+    parser.root = expression(&parser)
 
-    return parser.root_expr
+    return parser
 }
