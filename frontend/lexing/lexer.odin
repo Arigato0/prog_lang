@@ -6,7 +6,7 @@ TokenType :: enum
 {
     Error,
     Indent,
-	Plus, Minus, ForwardSlash, Star,
+	Plus, Minus, ForwardSlash, Star, Caret,
     Float, Int, Identifier, String,
     Equal, EqualEqual, Less, Greater, 
     LessEqual, GreaterEqual, BangEqual,
@@ -84,6 +84,7 @@ advance_token :: proc(lexer: ^Lexer) -> Token
         case '[': return build_token(lexer, .LeftBrack)
         case ']': return build_token(lexer, .RightBrack)
         case ',': return build_token(lexer, .Comma)
+        case '^': return build_token(lexer, .Caret)
         case '=': return build_or_else(lexer, '=', .EqualEqual, .Equal)
         case '<': return build_or_else(lexer, '=', .LessEqual, .Less)
         case '>': return build_or_else(lexer, '=', .GreaterEqual, .Greater)

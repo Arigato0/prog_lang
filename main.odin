@@ -83,6 +83,8 @@ print_literal :: proc(literal: parsing.Literal)
 
 print_ast :: proc(root: ^parsing.Expr)
 {
+    if root == nil do return 
+    
     #partial switch v in root 
     {
     case parsing.BinaryExpr:

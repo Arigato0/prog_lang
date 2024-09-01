@@ -100,9 +100,14 @@ unary :: proc(using parser: ^Parser) -> ^Expr
     return primary(parser)
 }
 
+power :: proc(using parser: ^Parser) -> ^Expr 
+{
+    return binary_rule(parser, unary, .Caret)
+}
+
 factor :: proc(using parser: ^Parser) -> ^Expr 
 {
-    return binary_rule(parser, unary, .Star, .ForwardSlash)
+    return binary_rule(parser, power, .Star, .ForwardSlash)
 }
 
 term :: proc(using parser: ^Parser) -> ^Expr 

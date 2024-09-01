@@ -61,7 +61,7 @@ set_error :: proc(using parser: ^Parser, message: string)
 
 expect_token :: proc(using parser: ^Parser, type: lexing.TokenType, message: string) -> bool
 {
-    if (match_token(parser, type)) do return false
+    if (match_token(parser, type)) do return true
     
     set_error(parser, message)
 

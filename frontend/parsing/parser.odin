@@ -56,11 +56,17 @@ Expr :: union
     VarPair,
 }
 
+Stmt :: union 
+{
+
+}
+
 Parser :: struct 
 {
     token_offset: int,
     root: ^Expr,
     tokens: []lexing.Token,
+    statements: [dynamic]Stmt,
     error: Maybe(Error)
 }
 
