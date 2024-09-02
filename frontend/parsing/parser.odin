@@ -40,6 +40,7 @@ IdentifierExpr :: struct
     name: ^lexing.Token
 }
 
+// as a statement its a variable decleration but as an expression it is assignment
 VarPair :: struct 
 {
     name: ^lexing.Token,
@@ -56,17 +57,36 @@ Expr :: union
     VarPair,
 }
 
+// for when expected a statement but an expression was also acceptable
+ExpressionStmt :: struct 
+{
+    expr: ^Expr
+}
+
+BlockStmt :: struct 
+{
+    statments: []^Stmt
+}
+
+IfStmt :: struct 
+{
+    condition: ^Expr,
+    branch: BlockStmt
+}
+
 Stmt :: union 
 {
-
+    VarPair,
+    IfStmt,
+    BlockStmt,
+    ExpressionStmt,
 }
 
 Parser :: struct 
 {
     token_offset: int,
-    root: ^Expr,
     tokens: []lexing.Token,
-    statements: [dynamic]Stmt,
+    statements: [dynamic]^Stmt,
     error: Maybe(Error)
 }
 
@@ -88,11 +108,39 @@ free_expr :: proc(root: ^Expr)
     free(root)
 }
 
+free_a_stmt :: proc(root: ^Stmt)
+{
+    #partial switch v in root 
+    {
+    case VarPair:
+        free_expr(v.value)
+        free(root)
+    }
+}
+
+free_all_stmt :: proc(stmts: []^Stmt)
+{
+    for stmt in stmts
+    {
+        free_a_stmt(stmt)
+    }
+
+    delete(stmts)
+}
+
+free_stmt :: proc{free_a_stmt, free_all_stmt}
+
 parse_tokens :: proc(tokens: []lexing.Token) -> Parser 
 {
     parser := Parser { tokens = tokens }
 
-    parser.root = expression(&parser)
+    // parser.root = expression(&parser)
+
+    for _, had_err := parser.error.?; !had_err && !match_token(&parser, .Eof);
+    {
+        stmt := decleration(&parser)
+        append(&parser.statements, stmt)
+    }
 
     return parser
 }

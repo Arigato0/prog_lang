@@ -81,7 +81,7 @@ print_literal :: proc(literal: parsing.Literal)
     }
 }
 
-print_ast :: proc(root: ^parsing.Expr)
+print_expr :: proc(root: ^parsing.Expr)
 {
     if root == nil do return 
     
@@ -89,19 +89,23 @@ print_ast :: proc(root: ^parsing.Expr)
     {
     case parsing.BinaryExpr:
         fmt.printf("({} ", lexing.get_token_string(v.operator))
-        print_ast(v.left)
-        print_ast(v.right)
+        print_expr(v.left)
+        print_expr(v.right)
         fmt.print(")")
     case parsing.UnaryExpr:
         fmt.printf("({} ", lexing.get_token_string(v.operator))
-        print_ast(v.right)
+        print_expr(v.right)
         fmt.print(")")
     case parsing.LiteralExpr:
         print_literal(v.value)
     case parsing.GroupingExpr:
-        print_ast(v.inside)
+        print_expr(v.inside)
     case parsing.IdentifierExpr:
         fmt.print(lexing.get_token_string(v.name))
+    case parsing.VarPair:
+        fmt.printf("({} = ", lexing.get_token_string(v.name))
+        print_expr(v.value)
+        fmt.println(")")
     }
 
     fmt.print(" ")
@@ -133,6 +137,19 @@ print_unfreed_memory :: proc(tracking_alloc: ^mem.Tracking_Allocator)
         {
             fmt.printfln("\t({}) {}", entry.memory, entry.location)
         }
+    }
+}
+
+print_stmt :: proc(stmt: ^parsing.Stmt)
+{
+    #partial switch v in stmt 
+    {
+    case parsing.VarPair:
+        fmt.printf("({} := ", lexing.get_token_string(v.name))
+        print_expr(v.value)
+        fmt.println(")")
+    case parsing.ExpressionStmt:
+        print_expr(v.expr)
     }
 }
 
@@ -169,7 +186,7 @@ main :: proc()
 
     parser := parsing.parse_tokens(tokens[:])
 
-    defer parsing.free_expr(parser.root)
+    defer parsing.free_stmt(parser.statements[:])
 
     if err, had_err := parser.error.?; had_err
     {
@@ -180,8 +197,10 @@ main :: proc()
 
     when PRINT_AST 
     {
-        print_ast(parser.root)
-        fmt.println()
+        for stmt in parser.statements
+        {
+            print_stmt(stmt)
+        }
     }
 
 }
