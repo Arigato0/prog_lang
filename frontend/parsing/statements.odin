@@ -71,17 +71,19 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
         }
     }
 
-    ok = expect_token(parser, "expected an identifier and a left parenthesis and a colon", .RightParen, .Colon, .Indent)
+    ok = expect_token(parser, "expected an identifier and a left parenthesis and a colon", .RightParen, .Colon)
 
     if !ok do return nil
 
-    start_indent := previous_token(parser).value.(int)
+    start_indent := current_token(parser).value.(int)
 
     for !at_end(parser)
     {
         if match_token(parser, .Indent) 
         {
             level := previous_token(parser).value.(int)
+
+            fmt.println(level, start_indent)
 
             if level != start_indent 
             {

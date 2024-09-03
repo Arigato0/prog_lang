@@ -148,6 +148,10 @@ parse_tokens :: proc(tokens: []lexing.Token) -> Parser
     for _, had_err := parser.error.?; !had_err && !match_token(&parser, .Eof);
     {
         stmt := decleration(&parser)
+        if stmt == nil 
+        {
+            break
+        }
         append(&parser.statements, stmt)
     }
 

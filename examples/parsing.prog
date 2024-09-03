@@ -3,3 +3,4 @@ result = a + 10
 
 fn add(a, b):
     5 + 10
+        a
