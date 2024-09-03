@@ -60,7 +60,7 @@ primary :: proc(using parser: ^Parser) -> ^Expr
     {
         inside := expression(parser)
 
-        ok := expect_token(parser, .RightParen, "expected matching closing parenthesis")
+        ok := expect_token(parser, "expected matching closing parenthesis", .RightParen)
 
         if !ok
         {

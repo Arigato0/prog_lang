@@ -65,7 +65,7 @@ ExpressionStmt :: struct
 
 BlockStmt :: struct 
 {
-    statments: []^Stmt
+    statments: [dynamic]^Stmt
 }
 
 IfStmt :: struct 
@@ -74,18 +74,27 @@ IfStmt :: struct
     branch: BlockStmt
 }
 
+FnDecleration :: struct 
+{
+    name: ^lexing.Token,
+    args: [dynamic]^Expr,
+    body: BlockStmt,
+}
+
 Stmt :: union 
 {
     VarPair,
     IfStmt,
     BlockStmt,
     ExpressionStmt,
+    FnDecleration,
 }
 
 Parser :: struct 
 {
     token_offset: int,
     tokens: []lexing.Token,
+    last_indent: int,
     statements: [dynamic]^Stmt,
     error: Maybe(Error)
 }

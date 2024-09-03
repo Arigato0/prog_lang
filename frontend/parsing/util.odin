@@ -59,11 +59,21 @@ set_error :: proc(using parser: ^Parser, message: string)
     }
 }
 
-expect_token :: proc(using parser: ^Parser, type: lexing.TokenType, message: string) -> bool
+expect_token :: proc(using parser: ^Parser, message: string, types: ..lexing.TokenType) -> bool
 {
-    if (match_token(parser, type)) do return true
+    for type in types 
+    {
+        if (!match_token(parser, type)) 
+        {
+            set_error(parser, message)
+            return false
+        }
+    }
     
-    set_error(parser, message)
+    return true
+}
 
-    return false
+rollback :: proc(using parser: ^Parser)
+{
+    token_offset -= 1
 }

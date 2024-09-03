@@ -1,2 +1,5 @@
 result := 5 + 2
-result = 10
+result = a + 10
+
+fn add(a, b):
+    5 + 10

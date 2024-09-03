@@ -150,6 +150,23 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         fmt.println(")")
     case parsing.ExpressionStmt:
         print_expr(v.expr)
+    case parsing.FnDecleration:
+        fmt.printf("(fn {} (", lexing.get_token_string(v.name))
+        for expr, i in v.args
+        {
+            print_expr(expr)
+
+            if i < len(v.args)-1
+            {
+                fmt.print(", ")
+            }
+        }
+        fmt.printf(") body =>\n")
+        for stmt in v.body.statments
+        {
+            print_stmt(stmt)
+        }
+        fmt.println(")")
     }
 }
 
