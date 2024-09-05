@@ -123,7 +123,11 @@ decleration :: proc(using parser: ^Parser, start_indent := 0) -> ^Stmt
     {
         level := previous_token(parser).value.(int)
 
-        if level != start_indent 
+        if level < start_indent 
+        {
+            return decleration(parser, start_indent)
+        }
+        if level > start_indent 
         {
             set_error(parser, "expected same indent level as start of function")
             return nil
