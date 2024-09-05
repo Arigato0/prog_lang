@@ -1,6 +1,9 @@
 result := 5 + 2
 result = a + 10
 
+if result > 10:
+    result = 0
+
 fn add(a, b):
     5 + 10
     return 5 + 10, 6

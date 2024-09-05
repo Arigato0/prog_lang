@@ -162,9 +162,14 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
             }
         }
         fmt.printf(") body =>\n")
-        for stmt in v.body.statments
+        for stmt, i in v.body.statments
         {
             print_stmt(stmt)
+
+            if i < len(v.args)-1
+            {
+                fmt.println()
+            }
         }
         fmt.println(")")
     case parsing.ReturnStmt:
@@ -172,6 +177,14 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         for expr in v.values
         {
             print_expr(expr)
+        }
+        fmt.println(")")
+    case parsing.IfStmt:
+        fmt.print("(if ")
+        print_expr(v.condition)
+        for stmt in v.branch.statments
+        {
+            print_stmt(stmt)
         }
         fmt.println(")")
     }

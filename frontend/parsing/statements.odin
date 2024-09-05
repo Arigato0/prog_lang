@@ -46,6 +46,38 @@ var_pair :: proc(using parser: ^Parser) -> ^Stmt
     return var_decl
 }
 
+block_stmt :: proc(using parser: ^Parser) -> BlockStmt 
+{
+    block := BlockStmt {}
+
+    current := current_token(parser) 
+
+    if current.type != .Indent
+    {
+        set_error(parser, "expected an indentation at the begining of a block")
+        block.statments = nil 
+        return block
+    }
+
+    start_indent := current.value.(int)
+
+    for !at_end(parser) && current_token(parser).type == .Indent
+    {
+        stmt := decleration(parser, start_indent)
+
+        if stmt == nil 
+        {
+            return BlockStmt {statments = nil}
+        }
+
+        append(&block.statments, stmt)
+    }
+
+    last_indent = start_indent
+
+    return block
+}
+
 fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
 {
     ok := expect_token(parser, "expected an identifier", .Identifier)
@@ -74,34 +106,9 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
 
     if !ok do return nil
 
-    start_indent := current_token(parser).value.(int)
+    fn.body = block_stmt(parser) 
 
-    for !at_end(parser)
-    {
-        if match_token(parser, .Indent) 
-        {
-            level := previous_token(parser).value.(int)
-
-            if level != start_indent 
-            {
-                set_error(parser, "expected same indent level as start of function")
-                return nil
-            }
-        }
-        else 
-        {
-            break
-        }
-        
-        stmt := decleration(parser)
-
-        if stmt != nil 
-        {
-            append(&fn.body.statments, stmt)
-        }
-    }
-
-    last_indent = start_indent
+    if fn.body.statments == nil do return nil
 
     stmt := new(Stmt)
 
@@ -110,9 +117,21 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
     return stmt
 }
 
-decleration :: proc(using parser: ^Parser) -> ^Stmt
+decleration :: proc(using parser: ^Parser, start_indent := 0) -> ^Stmt
 {
-    if match_token(parser, .Identifier)
+    if match_token(parser, .Indent) 
+    {
+        level := previous_token(parser).value.(int)
+
+        if level != start_indent 
+        {
+            set_error(parser, "expected same indent level as start of function")
+            return nil
+        }
+
+        return decleration(parser, start_indent)
+    }
+    else if match_token(parser, .Identifier)
     {
         return var_pair(parser)
     }
@@ -150,6 +169,28 @@ return_stmt :: proc(using parser: ^Parser) -> ^Stmt
     return stmt
 }
 
+if_stmt :: proc(using parser: ^Parser) -> ^Stmt 
+{
+    condition := expression(parser)
+
+    ok := expect_token(parser, "expected a colon after if statement condition", .Colon)
+
+    if !ok do return nil 
+
+    block := block_stmt(parser) 
+
+    if block.statments == nil do return nil 
+
+    stmt := new(Stmt)
+
+    stmt^ = IfStmt {
+        condition = condition,
+        branch = block
+    }
+
+    return stmt
+}
+
 statement :: proc(using parser: ^Parser) -> ^Stmt
 {
     if match_token(parser, .Indent)
@@ -160,6 +201,10 @@ statement :: proc(using parser: ^Parser) -> ^Stmt
     else if match_token(parser, .Return)
     {
         return return_stmt(parser)
+    }
+    else if match_token(parser, .If)
+    {
+        return if_stmt(parser)
     }
     else 
     {
