@@ -68,8 +68,10 @@ BlockStmt :: struct
     statments: [dynamic]^Stmt
 }
 
+// is used for if, else if, and else. it will be else, if condition is nil
 IfStmt :: struct 
 {
+    is_elif: bool,
     condition: ^Expr,
     branch: BlockStmt
 }

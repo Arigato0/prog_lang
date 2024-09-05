@@ -180,12 +180,26 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         }
         fmt.println(")")
     case parsing.IfStmt:
-        fmt.print("(if ")
-        print_expr(v.condition)
+
+        if v.is_elif 
+        {
+            fmt.print("(else if")
+        }
+        if v.condition != nil 
+        {
+            fmt.print("(if ")
+            print_expr(v.condition)
+        }
+        else 
+        {
+            fmt.println("(else")
+        }
+
         for stmt in v.branch.statments
         {
             print_stmt(stmt)
         }
+
         fmt.println(")")
     }
 }

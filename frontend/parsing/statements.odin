@@ -171,6 +171,8 @@ return_stmt :: proc(using parser: ^Parser) -> ^Stmt
 
 if_stmt :: proc(using parser: ^Parser) -> ^Stmt 
 {
+    is_elif := previous_token(parser).type == .Else 
+
     condition := expression(parser)
 
     ok := expect_token(parser, "expected a colon after if statement condition", .Colon)
@@ -184,7 +186,28 @@ if_stmt :: proc(using parser: ^Parser) -> ^Stmt
     stmt := new(Stmt)
 
     stmt^ = IfStmt {
+        is_elif = is_elif,
         condition = condition,
+        branch = block
+    }
+
+    return stmt
+}
+
+else_stmt :: proc(using parser: ^Parser) -> ^Stmt 
+{
+    ok := expect_token(parser, "expected a colon after else statement condition", .Colon)
+
+    if !ok do return nil 
+
+    block := block_stmt(parser) 
+
+    if block.statments == nil do return nil 
+
+    stmt := new(Stmt)
+
+    stmt^ = IfStmt {
+        condition = nil,
         branch = block
     }
 
@@ -205,6 +228,14 @@ statement :: proc(using parser: ^Parser) -> ^Stmt
     else if match_token(parser, .If)
     {
         return if_stmt(parser)
+    }
+    else if match_token(parser, .Else)
+    {
+        if match_token(parser, .If)
+        {
+            return if_stmt(parser)
+        }
+        return else_stmt(parser)
     }
     else 
     {
