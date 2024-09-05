@@ -44,6 +44,7 @@ IdentifierExpr :: struct
 VarPair :: struct 
 {
     name: ^lexing.Token,
+    operator: ^lexing.Token,
     value: ^Expr
 }
 
@@ -88,6 +89,29 @@ ReturnStmt :: struct
     values: [dynamic]^Expr
 }
 
+Range :: struct 
+{
+    start: ^Expr,
+    end: ^Expr,
+    inclusive: bool,
+}
+
+ForInStmt :: struct 
+{
+    element1: ^lexing.Token,
+    element2: ^lexing.Token,
+    range: union {^Expr, Range},
+    body: BlockStmt,
+}
+
+ForStmt :: struct 
+{
+    initializer: ^Expr,
+    condition: ^Expr,
+    update: ^Expr,
+    body: BlockStmt,
+}
+
 Stmt :: union 
 {
     VarPair,
@@ -96,6 +120,8 @@ Stmt :: union
     ExpressionStmt,
     FnDecleration,
     ReturnStmt,
+    ForStmt,
+    ForInStmt,
 }
 
 Parser :: struct 

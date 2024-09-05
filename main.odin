@@ -29,7 +29,8 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
         "true" = .True,
         "false" = .False,
         "return" = .Return,
-        "pass" = .Pass
+        "pass" = .Pass,
+        "in" = .In,
     }
 
     defer delete(lexer.keywords)
@@ -103,7 +104,7 @@ print_expr :: proc(root: ^parsing.Expr)
     case parsing.IdentifierExpr:
         fmt.print(lexing.get_token_string(v.name))
     case parsing.VarPair:
-        fmt.printf("({} = ", lexing.get_token_string(v.name))
+        fmt.printf("({} {} ", lexing.get_token_string(v.name), lexing.get_token_string(v.operator))
         print_expr(v.value)
         fmt.println(")")
     }
@@ -196,6 +197,27 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         }
 
         for stmt in v.branch.statments
+        {
+            print_stmt(stmt)
+        }
+
+        fmt.println(")")
+    case parsing.ForInStmt:
+        fmt.printf("(for {} {} in ", 
+            lexing.get_token_string(v.element1), lexing.get_token_string(v.element2) if v.element2 != nil else "")
+
+        switch range_v in v.range
+        {
+        case parsing.Range:
+            print_expr(range_v.start)
+            fmt.print("..", "=" if range_v.inclusive else "")
+            print_expr(range_v.end)
+        case ^parsing.Expr:
+            print_expr(range_v)
+        }
+        fmt.println()
+
+        for stmt in v.body.statments
         {
             print_stmt(stmt)
         }

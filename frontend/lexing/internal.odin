@@ -131,7 +131,7 @@ build_digit :: proc(using lexer: ^Lexer) -> Token
     
     is_float := false
 
-    if (peak(lexer) == '.')
+    if (peak(lexer) == '.' && peak_next(lexer) != '.')
     {
         is_float = true
         advance_stream(lexer)

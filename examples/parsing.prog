@@ -1,14 +1,4 @@
-result := 5 + 2
-result = a + 10
+result := 0
 
-if result > 10:
-    result = 0
-else:
-    result = 300
-
-fn add(a, b):
-    5 + 10
-    if ok:
-        return 10
-    return 5 + 10, 6
-
+for x in container:
+    result += i + 10

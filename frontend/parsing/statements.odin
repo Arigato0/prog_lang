@@ -17,7 +17,7 @@ var_pair :: proc(using parser: ^Parser) -> ^Stmt
 {
     identifier := previous_token(parser)
 
-    if !match_token(parser, .ColonEqual, .Equal)
+    if !match_token(parser, .ColonEqual, .Equal, .PlusEqual, .MinusEqual, .ForwardSlashEqual, .MinusEqual)
     {
         rollback(parser)
         return expression_stmt(parser)
@@ -29,6 +29,7 @@ var_pair :: proc(using parser: ^Parser) -> ^Stmt
 
     pair := VarPair {
         name = identifier,
+        operator = previous_token(parser),
         value = expression(parser)
     }
     
@@ -123,10 +124,6 @@ decleration :: proc(using parser: ^Parser, start_indent := 0) -> ^Stmt
     {
         level := previous_token(parser).value.(int)
 
-        if level < start_indent 
-        {
-            return decleration(parser, start_indent)
-        }
         if level > start_indent 
         {
             set_error(parser, "expected same indent level as start of function")
@@ -218,6 +215,71 @@ else_stmt :: proc(using parser: ^Parser) -> ^Stmt
     return stmt
 }
 
+for_range_stmt :: proc(using parser: ^Parser, element1, element2: ^lexing.Token) -> ^Stmt
+{
+    for_range := ForInStmt {
+        element1 = element1,
+        element2 = element2,
+    }
+
+    expr := expression(parser)
+
+    if match_token(parser, .DotDot)
+    {
+        for_range.range = Range {
+            inclusive = match_token(parser, .Less),
+            start = expr,
+            end = expression(parser)
+        }
+    }
+    else 
+    {
+        for_range.range = expr
+    }
+
+    ok := expect_token(parser, "expected a colon after for statement head", .Colon)
+
+    if !ok do return nil 
+
+    block := block_stmt(parser) 
+
+    if block.statments == nil do return nil 
+
+    for_range.body = block
+
+    stmt := new(Stmt)
+
+    stmt^ = for_range
+
+    return stmt
+}
+
+for_stmt :: proc(using parser: ^Parser) -> ^Stmt 
+{
+    if match_token(parser, .Identifier)
+    {
+        identifier := previous_token(parser)
+        element2: ^lexing.Token
+        
+        if match_token(parser, .Comma)
+        {
+            ok := expect_token(parser, "expected a second identifier after comma", .Identifier)
+            
+            if !ok do return nil 
+            
+            element2 = previous_token(parser)
+        }
+        
+        if match_token(parser, .In)
+        {
+            fmt.println("yes")
+            return for_range_stmt(parser, identifier, element2)
+        }
+    }
+
+    return nil
+}
+
 statement :: proc(using parser: ^Parser) -> ^Stmt
 {
     if match_token(parser, .Indent)
@@ -240,6 +302,10 @@ statement :: proc(using parser: ^Parser) -> ^Stmt
             return if_stmt(parser)
         }
         return else_stmt(parser)
+    }
+    else if match_token(parser, .For)
+    {
+        return for_stmt(parser)
     }
     else 
     {

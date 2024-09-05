@@ -7,11 +7,12 @@ TokenType :: enum
     Error,
     Indent, Terminate,
 	Plus, Minus, ForwardSlash, Star, Caret,
+    PlusEqual, MinusEqual, ForwardSlashEqual, StarEqual,
     Float, Int, Identifier, String,
     Equal, EqualEqual, Less, Greater, 
     LessEqual, GreaterEqual, BangEqual,
     LeftParen, RightParen, LeftBrace, RightBrace, LeftBrack, RightBrack,
-    Dot, Comma, Arrow, Bang, ColonEqual, Colon, ColonColon,
+    Dot, DotDot, Comma, Arrow, Bang, ColonEqual, Colon, ColonColon,
     True, False, Nil, Return, Pass, 
     Struct, Fn, For, While, If, Else, In,
     Eof,
@@ -77,17 +78,17 @@ advance_token :: proc(lexer: ^Lexer) -> Token
 
     switch c 
     {
-        case '+': return build_token(lexer, .Plus)
-        case '-': return build_token(lexer, .Minus)
-        case '/': return build_token(lexer, .ForwardSlash)
-        case '*': return build_token(lexer, .Star)
         case '(': return build_token(lexer, .LeftParen)
         case ')': return build_token(lexer, .RightParen)
-        case '.': return build_token(lexer, .Dot)
         case '[': return build_token(lexer, .LeftBrack)
         case ']': return build_token(lexer, .RightBrack)
         case ',': return build_token(lexer, .Comma)
         case '^': return build_token(lexer, .Caret)
+        case '.': return build_or_else(lexer, '.', .DotDot, .Dot)
+        case '+': return build_or_else(lexer, '=', .PlusEqual, .Plus)
+        case '-': return build_or_else(lexer, '=', .MinusEqual, .Minus)
+        case '/': return build_or_else(lexer, '=', .ForwardSlashEqual, .ForwardSlash)
+        case '*': return build_or_else(lexer, '=', .StarEqual, .Star)
         case '=': return build_or_else(lexer, '=', .EqualEqual, .Equal)
         case '<': return build_or_else(lexer, '=', .LessEqual, .Less)
         case '>': return build_or_else(lexer, '=', .GreaterEqual, .Greater)
