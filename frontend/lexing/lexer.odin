@@ -5,7 +5,7 @@ import "core:unicode"
 TokenType :: enum 
 {
     Error,
-    Indent,
+    Indent, Terminate,
 	Plus, Minus, ForwardSlash, Star, Caret,
     Float, Int, Identifier, String,
     Equal, EqualEqual, Less, Greater, 
@@ -36,6 +36,7 @@ Lexer :: struct
     line:      int,
     indent:    int,
     in_middle: bool,
+    last_type: TokenType,
     keywords:  map[string]TokenType,
 }
 
@@ -64,7 +65,9 @@ advance_token :: proc(lexer: ^Lexer) -> Token
         return make_error(lexer, "either lexer or source string is nil or empty")
     }
 
-    handle_blank(lexer)
+    should_terminate := handle_blank(lexer)
+
+    if should_terminate do return build_token(lexer, .Terminate)
 
     if should_indent(lexer) do return build_token(lexer, .Indent)
 

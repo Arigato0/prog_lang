@@ -167,6 +167,13 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
             print_stmt(stmt)
         }
         fmt.println(")")
+    case parsing.ReturnStmt:
+        fmt.print("(return ")
+        for expr in v.values
+        {
+            print_expr(expr)
+        }
+        fmt.println(")")
     }
 }
 

@@ -51,6 +51,8 @@ build_token :: proc(using lexer: ^Lexer, type: TokenType) -> Token
 
     reset(lexer)
 
+    last_type = type
+
     return out
 }
 
@@ -84,7 +86,7 @@ should_indent :: proc(using lexer: ^Lexer) -> bool
     return indent > 0 && !in_middle
 }
 
-handle_blank :: proc(using lexer: ^Lexer)  
+handle_blank :: proc(using lexer: ^Lexer) -> bool 
 {
     loop: for !at_end(lexer)
     {
@@ -98,6 +100,7 @@ handle_blank :: proc(using lexer: ^Lexer)
                 indent = 0
                 line += 1
                 in_middle = false
+                if last_type == .Return do return true
             // TODO: add multile comments with ## to start and ## to end. EXAMPLE: ## this is a comment ##
             case '#':
                 for !at_end(lexer) && peak_next(lexer) != '\n'
@@ -110,6 +113,8 @@ handle_blank :: proc(using lexer: ^Lexer)
 
         advance_stream(lexer)
     }
+
+    return false
 }
 
 scan_digits :: proc(using lexer: ^Lexer) 
@@ -154,6 +159,7 @@ build_identifier :: proc(using lexer: ^Lexer) -> Token
     type := keywords[transmute(string)out.value.([]byte)] or_else out.type
     
     out.type = type
+    last_type = type
 
     return out;
 }

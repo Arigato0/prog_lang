@@ -81,6 +81,11 @@ FnDecleration :: struct
     body: BlockStmt,
 }
 
+ReturnStmt :: struct 
+{
+    values: [dynamic]^Expr
+}
+
 Stmt :: union 
 {
     VarPair,
@@ -88,6 +93,7 @@ Stmt :: union
     BlockStmt,
     ExpressionStmt,
     FnDecleration,
+    ReturnStmt,
 }
 
 Parser :: struct 

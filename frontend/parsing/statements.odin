@@ -52,7 +52,6 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
 
     if !ok do return nil
 
-
     identifier := previous_token(parser)
 
     ok = expect_token(parser, "expected a '('", .LeftParen)
@@ -83,11 +82,9 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
         {
             level := previous_token(parser).value.(int)
 
-            fmt.println(level, start_indent)
-
             if level != start_indent 
             {
-                set_error(parser, "expected same indent level")
+                set_error(parser, "expected same indent level as start of function")
                 return nil
             }
         }
@@ -129,12 +126,40 @@ decleration :: proc(using parser: ^Parser) -> ^Stmt
     }
 }
 
+return_stmt :: proc(using parser: ^Parser) -> ^Stmt 
+{
+    stmt := new(Stmt)
+
+    return_stmt := ReturnStmt {}
+
+    if !match_token(parser, .Terminate)
+    {
+        for 
+        {
+            append(&return_stmt.values, expression(parser))
+
+            if !match_token(parser, .Comma)
+            {
+                break
+            }
+        } 
+    }
+
+    stmt^ = return_stmt
+
+    return stmt
+}
+
 statement :: proc(using parser: ^Parser) -> ^Stmt
 {
     if match_token(parser, .Indent)
     {
         last_indent = previous_token(parser).value.(int)
         return nil
+    }
+    else if match_token(parser, .Return)
+    {
+        return return_stmt(parser)
     }
     else 
     {
