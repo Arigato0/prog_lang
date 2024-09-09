@@ -12,7 +12,7 @@ TokenType :: enum
     Equal, EqualEqual, Less, Greater, 
     LessEqual, GreaterEqual, BangEqual,
     LeftParen, RightParen, LeftBrace, RightBrace, LeftBrack, RightBrack,
-    Dot, DotDot, Comma, Arrow, Bang, ColonEqual, Colon, ColonColon,
+    Dot, DotDot, DotEqual, Comma, Arrow, Bang, ColonEqual, Colon, ColonColon,
     True, False, Nil, Return, Pass, 
     Struct, Fn, For, While, If, Else, In,
     Eof,
@@ -84,12 +84,32 @@ advance_token :: proc(lexer: ^Lexer) -> Token
         case ']': return build_token(lexer, .RightBrack)
         case ',': return build_token(lexer, .Comma)
         case '^': return build_token(lexer, .Caret)
-        case '.': return build_or_else(lexer, '.', .DotDot, .Dot)
         case '+': return build_or_else(lexer, '=', .PlusEqual, .Plus)
         case '-': return build_or_else(lexer, '=', .MinusEqual, .Minus)
         case '/': return build_or_else(lexer, '=', .ForwardSlashEqual, .ForwardSlash)
         case '*': return build_or_else(lexer, '=', .StarEqual, .Star)
-        case '=': return build_or_else(lexer, '=', .EqualEqual, .Equal)
+        case '.': 
+            if match(lexer, '.')
+            {
+                return build_or_else(lexer, '=', .DotEqual, .DotDot)
+            }
+            else 
+            {
+                return build_token(lexer, .Dot)
+            }
+        case '=': 
+            if match(lexer, '=')
+            {
+                return build_token(lexer, .EqualEqual)
+            }
+            else if match(lexer, '>')
+            {
+                return build_token(lexer, .Arrow)
+            }
+            else 
+            {
+                return build_token(lexer, .Equal)
+            }
         case '<': return build_or_else(lexer, '=', .LessEqual, .Less)
         case '>': return build_or_else(lexer, '=', .GreaterEqual, .Greater)
         case '!': return build_or_else(lexer, '=', .BangEqual, .Bang)

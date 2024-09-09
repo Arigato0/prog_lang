@@ -213,15 +213,8 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         fmt.printf("(for {} {} in ", 
             lexing.get_token_string(v.element1), lexing.get_token_string(v.element2) if v.element2 != nil else "")
 
-        switch range_v in v.range
-        {
-        case parsing.Range:
-            print_expr(range_v.start)
-            fmt.print("..", "=" if range_v.inclusive else "")
-            print_expr(range_v.end)
-        case ^parsing.Expr:
-            print_expr(range_v)
-        }
+        print_expr(v.range)
+
         fmt.println()
 
         for stmt in v.body.statments
@@ -282,5 +275,4 @@ main :: proc()
             print_stmt(stmt)
         }
     }
-
 }

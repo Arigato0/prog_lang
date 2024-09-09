@@ -96,18 +96,11 @@ ReturnStmt :: struct
     values: [dynamic]^Expr
 }
 
-Range :: struct 
-{
-    start: ^Expr,
-    end: ^Expr,
-    inclusive: bool,
-}
-
 ForInStmt :: struct 
 {
     element1: ^lexing.Token,
     element2: ^lexing.Token,
-    range: union {^Expr, Range},
+    range: ^Expr,
     body: BlockStmt,
 }
 

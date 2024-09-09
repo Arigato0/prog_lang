@@ -150,7 +150,12 @@ equality :: proc(using parser: ^Parser) -> ^Expr
     return binary_rule(parser, comparison, .EqualEqual, .BangEqual)
 }
 
+numeric_range :: proc(using parser: ^Parser) -> ^Expr 
+{
+    return binary_rule(parser, equality, .DotDot, .DotEqual)
+}
+
 expression :: proc(using parser: ^Parser) -> ^Expr 
 {
-    return equality(parser)
+    return numeric_range(parser)
 }

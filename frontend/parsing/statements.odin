@@ -103,15 +103,35 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
         }
     }
 
-    ok = expect_token(parser, "expected an identifier and a left parenthesis and a colon", .RightParen, .Colon)
-
+    
+    ok = expect_token(parser, "expected an identifier and a right parenthesis", .RightParen)
+    
     if !ok do return nil
 
-    fn.body = block_stmt(parser) 
-
-    if fn.body.statments == nil do return nil
-
     stmt := new(Stmt)
+
+    defer if stmt == nil 
+    {
+        free(stmt)
+    }
+    
+    if match_token(parser, .Arrow)
+    {
+        expr := expression_stmt(parser)
+
+        append(&fn.body.statments, expr)
+    }
+    else if match_token(parser, .Colon)
+    {
+        fn.body = block_stmt(parser) 
+    
+        if fn.body.statments == nil do return nil
+    }
+    else 
+    {
+        set_error(parser, "expected a colon or arrow statement")
+        return nil
+    }
 
     stmt^ = fn
 
@@ -222,20 +242,7 @@ for_range_stmt :: proc(using parser: ^Parser, element1, element2: ^lexing.Token)
         element2 = element2,
     }
 
-    expr := expression(parser)
-
-    if match_token(parser, .DotDot)
-    {
-        for_range.range = Range {
-            inclusive = match_token(parser, .Less),
-            start = expr,
-            end = expression(parser)
-        }
-    }
-    else 
-    {
-        for_range.range = expr
-    }
+    for_range.range = expression(parser)
 
     ok := expect_token(parser, "expected a colon after for statement head", .Colon)
 
@@ -275,6 +282,8 @@ for_stmt :: proc(using parser: ^Parser) -> ^Stmt
             return for_range_stmt(parser, identifier, element2)
         }
     }
+
+    // TODO: implement clasic for loops
 
     return nil
 }
