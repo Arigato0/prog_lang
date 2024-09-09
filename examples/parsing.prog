@@ -1,4 +1,3 @@
-result := 0
 
-for x in container:
-    result += i + 10
+
+my_function(1 + 5, a)

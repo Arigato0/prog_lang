@@ -28,6 +28,12 @@ GroupingExpr :: struct
     inside: ^Expr
 }
 
+CallExpr :: struct 
+{
+    name: ^lexing.Token,
+    arguments: [dynamic]^Expr,
+}
+
 Literal :: union {^lexing.Token, bool}
 
 LiteralExpr :: struct 
@@ -56,6 +62,7 @@ Expr :: union
     LiteralExpr,
     IdentifierExpr,
     VarPair,
+    CallExpr,
 }
 
 // for when expected a statement but an expression was also acceptable

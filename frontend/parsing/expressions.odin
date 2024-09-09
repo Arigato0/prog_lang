@@ -53,8 +53,33 @@ primary :: proc(using parser: ^Parser) -> ^Expr
     }
     else if match_token(parser, .Identifier)
     {
-        previous := previous_token(parser)
-        expr^ = IdentifierExpr{previous}
+        identifier := previous_token(parser)
+
+        if match_token(parser, .LeftParen)
+        {
+            call_expr := CallExpr { name = identifier }
+
+            for !check_token(parser, .RightParen) && !at_end(parser)
+            {
+                // TODO: add support for var pairs so named arguments can work here
+                append(&call_expr.arguments, expression(parser))
+
+                if !match_token(parser, .Comma)
+                {
+                    break
+                }
+            }
+
+            ok := expect_token(parser, "expected a right parenthesis to match left one", .RightParen)
+
+            if !ok do return nil
+
+            expr^ = call_expr
+        }
+        else 
+        {
+            expr^ = IdentifierExpr{identifier}
+        }
     }
     else if match_token(parser, .LeftParen)
     {

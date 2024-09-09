@@ -272,7 +272,6 @@ for_stmt :: proc(using parser: ^Parser) -> ^Stmt
         
         if match_token(parser, .In)
         {
-            fmt.println("yes")
             return for_range_stmt(parser, identifier, element2)
         }
     }

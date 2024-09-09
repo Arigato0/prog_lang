@@ -107,6 +107,13 @@ print_expr :: proc(root: ^parsing.Expr)
         fmt.printf("({} {} ", lexing.get_token_string(v.name), lexing.get_token_string(v.operator))
         print_expr(v.value)
         fmt.println(")")
+    case parsing.CallExpr:
+        fmt.printf("(call {} (", lexing.get_token_string(v.name))
+        for expr in v.arguments
+        {
+            print_expr(expr)
+        }
+        fmt.println("))")
     }
 
     fmt.print(" ")
