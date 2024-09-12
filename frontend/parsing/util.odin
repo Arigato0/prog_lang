@@ -8,11 +8,21 @@ at_end :: proc(using parser: ^Parser) -> bool
     return token_offset >= len(tokens)
 }
 
-check_token :: proc(using parser: ^Parser, type: lexing.TokenType) -> bool
+check_token :: proc(using parser: ^Parser, types: ..lexing.TokenType) -> bool
 {
    if at_end(parser) do return false 
 
-   return tokens[token_offset].type == type
+   for type in types 
+   {
+        if tokens[token_offset].type != type do return false
+   }
+   
+   return true
+}
+
+check_previous_token :: proc(using parser: ^Parser, type: lexing.TokenType) -> bool 
+{
+    return previous_token(parser).type == type
 }
 
 previous_token :: proc(using parser: ^Parser) -> ^lexing.Token
@@ -59,7 +69,7 @@ set_error :: proc(using parser: ^Parser, message: string)
     }
 }
 
-expect_token :: proc(using parser: ^Parser, message: string, types: ..lexing.TokenType) -> bool
+expect_sequence :: proc(using parser: ^Parser, message: string, types: ..lexing.TokenType) -> bool
 {
     for type in types 
     {
@@ -68,6 +78,17 @@ expect_token :: proc(using parser: ^Parser, message: string, types: ..lexing.Tok
             set_error(parser, message)
             return false
         }
+    }
+    
+    return true
+}
+
+expect_token :: proc(using parser: ^Parser, message: string, types: ..lexing.TokenType) -> bool
+{
+    if (!match_token(parser, ..types)) 
+    {
+        set_error(parser, message)
+        return false
     }
     
     return true

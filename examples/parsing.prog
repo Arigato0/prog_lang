@@ -1,4 +1,12 @@
 
+struct MyStruct implements IStruct:
+    fn con():
+        println("constructed")
 
-for x in 0..=10:
-    println(x)
+    fn dec():
+        println("destructed")
+
+    fn say_hello():
+        println("hello")
+
+

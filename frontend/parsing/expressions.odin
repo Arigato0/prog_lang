@@ -69,12 +69,28 @@ primary :: proc(using parser: ^Parser) -> ^Expr
                     break
                 }
             }
+            
 
             ok := expect_token(parser, "expected a right parenthesis to match left one", .RightParen)
 
             if !ok do return nil
 
             expr^ = call_expr
+        }
+        else if match_token(parser, .LeftBrack)
+        {
+            value := expression(parser) 
+
+            // TODO: implement parsing slicing
+            if value == nil 
+            {
+                return nil
+            }
+
+            expr^ = SubScriptExpr {
+                identifier = identifier,
+                value = value
+            }
         }
         else 
         {

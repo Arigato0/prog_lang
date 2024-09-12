@@ -31,6 +31,10 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
         "return" = .Return,
         "pass" = .Pass,
         "in" = .In,
+        "ctor" = .Ctor,
+        "dtor" = .Dtor,
+        "implements" = .Implements,
+        "interface" = .Interface,
     }
 
     defer delete(lexer.keywords)
@@ -197,6 +201,7 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         {
             fmt.print("(if ")
             print_expr(v.condition)
+            fmt.println()
         }
         else 
         {
@@ -222,6 +227,15 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
             print_stmt(stmt)
         }
 
+        fmt.println(")")
+    case parsing.WhileStmt:
+        fmt.print("(while ",)
+        print_expr(v.condition)
+        fmt.println()
+        for stmt in v.body.statments
+        {
+            print_stmt(stmt)
+        }
         fmt.println(")")
     }
 }

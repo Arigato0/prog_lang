@@ -10,6 +10,12 @@ Error :: struct
     token: ^lexing.Token
 }
 
+SubScriptExpr :: struct 
+{
+    identifier: ^lexing.Token,
+    value: ^Expr,
+}
+
 BinaryExpr :: struct
 {
     left: ^Expr,
@@ -63,6 +69,7 @@ Expr :: union
     IdentifierExpr,
     VarPair,
     CallExpr,
+    SubScriptExpr,
 }
 
 // for when expected a statement but an expression was also acceptable
@@ -91,6 +98,15 @@ FnDecleration :: struct
     body: BlockStmt,
 }
 
+StructDecleration :: struct 
+{
+    name: ^lexing.Token,
+    interface: ^lexing.Token,
+    ctor: ^Stmt,
+    dtor: ^Stmt,
+    methods: [dynamic]^Stmt,
+}
+
 ReturnStmt :: struct 
 {
     values: [dynamic]^Expr
@@ -112,6 +128,12 @@ ForStmt :: struct
     body: BlockStmt,
 }
 
+WhileStmt :: struct 
+{
+    condition: ^Expr,
+    body: BlockStmt,
+}
+
 Stmt :: union 
 {
     VarPair,
@@ -122,6 +144,8 @@ Stmt :: union
     ReturnStmt,
     ForStmt,
     ForInStmt,
+    WhileStmt,
+    StructDecleration,
 }
 
 Parser :: struct 
