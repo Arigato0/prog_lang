@@ -49,29 +49,37 @@ var_pair :: proc(using parser: ^Parser) -> ^Stmt
 
 block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> BlockStmt 
 {
-    block := BlockStmt {}
-
-    current := current_token(parser) 
-
-    if current.type != .Indent
+    if !check_token(parser, .Indent)
     {
         set_error(parser, "expected an indentation at the begining of a block")
-        block.statments = nil 
-        return block
+        return BlockStmt { statments = nil }
     }
 
-    start_indent := current.value.(int)
-    last_indent = start_indent
+    block := BlockStmt {}
 
+    start_indent := current_token(parser).value.(int)
+    last_indent = start_indent
+    
     for !at_end(parser) && last_indent == start_indent
     {
-        if !check_token(parser, ..allowed_types)
+        if match_token(parser, .Indent)
         {
-           set_error(parser, "found an unallowed type") 
-           return BlockStmt {statments = nil}
+            last_indent = previous_token(parser).value.(int)
         }
-        
-        stmt := decleration(parser, start_indent)
+        else 
+        {
+            break
+        }
+
+        fmt.println(last_indent, start_indent)
+
+        if last_indent > start_indent
+        {
+            set_error(parser, "indent level is greater than scope start indent")
+            break
+        }
+
+        stmt := decleration(parser)
 
         if stmt == nil 
         {
@@ -80,8 +88,6 @@ block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> 
 
         append(&block.statments, stmt)
     }
-
-    last_indent = start_indent
 
     return block
 }
@@ -144,23 +150,9 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
     return stmt
 }
 
-decleration :: proc(using parser: ^Parser, start_indent := 0) -> ^Stmt
+decleration :: proc(using parser: ^Parser) -> ^Stmt
 {
-    if match_token(parser, .Indent) 
-    {
-        level := previous_token(parser).value.(int)
-
-        if level > start_indent 
-        {
-            set_error(parser, "expected same indent level as start of function")
-            return nil
-        }
-
-        last_indent = level 
-
-        return decleration(parser, start_indent)
-    }
-    else if match_token(parser, .Identifier)
+    if match_token(parser, .Identifier)
     {
         return var_pair(parser)
     }
@@ -358,7 +350,7 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
             last_indent = previous_token(parser).value.(int)
         }
         
-        ok = expect_token(parser, "exepcted either a function", .Fn)
+        ok = expect_sequence(parser, "exepcted either a function", .Fn)
         
         if !ok
         {

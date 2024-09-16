@@ -44,7 +44,7 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
         token := lexing.advance_token(&lexer)
 
         if token.type == .Error {
-            fmt.printfln("error while lexing ({}:{}): {}", token.line, token.column, token.value)
+            fmt.printfln("error while lexing ({}:{}): {}", token.line, token.column, lexing.get_token_string(&token))
             return nil
         }
 
@@ -118,6 +118,10 @@ print_expr :: proc(root: ^parsing.Expr)
             print_expr(expr)
         }
         fmt.println("))")
+    case parsing.SubScriptExpr:
+        fmt.printf("(subscript {} [", lexing.get_token_string(v.identifier))
+        print_expr(v.value)
+        fmt.println("])")
     }
 
     fmt.print(" ")

@@ -82,10 +82,11 @@ primary :: proc(using parser: ^Parser) -> ^Expr
             value := expression(parser) 
 
             // TODO: implement parsing slicing
-            if value == nil 
-            {
-                return nil
-            }
+            if value == nil do return nil
+
+            ok := expect_token(parser, "exepcted matching bracket to close off subscript operation", .RightBrack)
+
+            if !ok do return nil
 
             expr^ = SubScriptExpr {
                 identifier = identifier,

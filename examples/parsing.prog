@@ -1,12 +1,9 @@
+fn ok():
+    a
+    if cond:
+        println("yes")
+    return 5
 
-struct MyStruct implements IStruct:
-    fn con():
-        println("constructed")
 
-    fn dec():
-        println("destructed")
-
-    fn say_hello():
-        println("hello")
-
+ok()
 
