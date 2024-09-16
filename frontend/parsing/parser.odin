@@ -104,7 +104,7 @@ StructDecleration :: struct
     interface: ^lexing.Token,
     ctor: ^Stmt,
     dtor: ^Stmt,
-    methods: [dynamic]^Stmt,
+    methods: BlockStmt,
 }
 
 ReturnStmt :: struct 

@@ -188,6 +188,13 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
             }
         }
         fmt.println(")")
+    case parsing.StructDecleration:
+        fmt.printfln("(struct {} ({}) =>", lexing.get_token_string(v.name), lexing.get_token_string(v.interface))
+        for stmt, i in v.methods.statments
+        {
+            print_stmt(stmt)
+        }
+        fmt.println(")")
     case parsing.ReturnStmt:
         fmt.print("(return ")
         for expr in v.values

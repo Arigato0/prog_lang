@@ -1,9 +1,12 @@
-fn ok():
-    a
-    if cond:
-        println("yes")
-    return 5
+
+struct User implements IUser:
+    
+    fn greet():
+        println("hello user")
+
+    fn login(username, password):
+        _handle_login(username, passowrd)
 
 
-ok()
-
+my_user := User()
+my_user.name = "john"

@@ -33,7 +33,7 @@ primary :: proc(using parser: ^Parser) -> ^Expr
 {
     expr := new(Expr)
 
-    defer if expr == nil
+    defer if _, had_err := error.?; had_err
     {
         free(expr)
     }

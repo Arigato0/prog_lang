@@ -4,6 +4,8 @@ package parsing
 import "core:fmt"
 import "../lexing"
 
+EMPTY_BLOCK :: BlockStmt { statments = nil }
+
 expression_stmt :: proc(using parser: ^Parser) -> ^Stmt 
 {
     stmt := new(Stmt)
@@ -47,15 +49,24 @@ var_pair :: proc(using parser: ^Parser) -> ^Stmt
     return var_decl
 }
 
-block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> BlockStmt 
+block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> (BlockStmt) 
 {
+    ok := expect_token(parser, "expected a colon at to begin block", .Colon)
+
+    if !ok do return EMPTY_BLOCK
+
     if !check_token(parser, .Indent)
     {
         set_error(parser, "expected an indentation at the begining of a block")
-        return BlockStmt { statments = nil }
+        return EMPTY_BLOCK
     }
-
+    
     block := BlockStmt {}
+
+    defer if _, had_err := error.?; had_err 
+    {
+        free_all_stmt(block.statments[:])
+    }
 
     start_indent := current_token(parser).value.(int)
     last_indent = start_indent
@@ -67,23 +78,26 @@ block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> 
             last_indent = previous_token(parser).value.(int)
         }
         else 
-        {
+        { // scope ended so break
             break
         }
 
-        fmt.println(last_indent, start_indent)
-
-        if last_indent > start_indent
+        if !check_token(parser, ..allowed_types)
+        {
+            set_error(parser, "unexpected token type found")
+            return EMPTY_BLOCK
+        }
+        else if last_indent > start_indent
         {
             set_error(parser, "indent level is greater than scope start indent")
-            break
+            return EMPTY_BLOCK
         }
 
         stmt := decleration(parser)
 
         if stmt == nil 
         {
-            return BlockStmt {statments = nil}
+            return EMPTY_BLOCK
         }
 
         append(&block.statments, stmt)
@@ -120,20 +134,13 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
     
     if !ok do return nil
 
-    stmt := new(Stmt)
-
-    defer if stmt == nil 
-    {
-        free(stmt)
-    }
-    
     if match_token(parser, .Arrow)
     {
         expr := expression_stmt(parser)
 
         append(&fn.body.statments, expr)
     }
-    else if match_token(parser, .Colon)
+    else if check_token(parser, .Colon)
     {
         fn.body = block_stmt(parser) 
     
@@ -144,6 +151,8 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
         set_error(parser, "expected a colon or arrow statement")
         return nil
     }
+
+    stmt := new(Stmt)
 
     stmt^ = fn
 
@@ -196,10 +205,6 @@ if_stmt :: proc(using parser: ^Parser) -> ^Stmt
 
     condition := expression(parser)
 
-    ok := expect_token(parser, "expected a colon after if statement condition", .Colon)
-
-    if !ok do return nil 
-
     block := block_stmt(parser) 
 
     if block.statments == nil do return nil 
@@ -217,10 +222,6 @@ if_stmt :: proc(using parser: ^Parser) -> ^Stmt
 
 else_stmt :: proc(using parser: ^Parser) -> ^Stmt 
 {
-    ok := expect_token(parser, "expected a colon after else statement condition", .Colon)
-
-    if !ok do return nil 
-
     block := block_stmt(parser) 
 
     if block.statments == nil do return nil 
@@ -243,10 +244,6 @@ for_range_stmt :: proc(using parser: ^Parser, element1, element2: ^lexing.Token)
     }
 
     for_range.range = expression(parser)
-
-    ok := expect_token(parser, "expected a colon after for statement head", .Colon)
-
-    if !ok do return nil 
 
     block := block_stmt(parser) 
 
@@ -298,10 +295,6 @@ while_stmt :: proc(using parser: ^Parser) -> ^Stmt
         return nil
     }
 
-    ok := expect_token(parser, "expected colon after while loop expression", .Colon)
-
-    if !ok do return nil 
-
     wstmt := WhileStmt { condition = expr }
 
     block := block_stmt(parser) 
@@ -336,40 +329,9 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
         decl.interface = previous_token(parser)
     }
 
-    ok = expect_sequence(parser, "expected a colon after struct signature", .Colon, .Indent) 
+    decl.methods = block_stmt(parser, .Fn)
 
-    if !ok do return nil
-
-    start_indent := previous_token(parser).value.(int)
-    last_indent = start_indent
-
-    for !at_end(parser) && last_indent == start_indent
-    {
-        if match_token(parser, .Indent)
-        {
-            last_indent = previous_token(parser).value.(int)
-        }
-        
-        ok = expect_sequence(parser, "exepcted either a function", .Fn)
-        
-        if !ok
-        {
-            return nil
-        }
-        
-        fn := fn_decleration(parser)
-
-        if fn == nil 
-        {
-            return nil
-        }
-
-        append(&decl.methods, fn)
-
-        last_indent = start_indent
-    }
-
-    last_indent = start_indent
+    if decl.methods.statments == nil do return nil
 
     stmt := new(Stmt)
 
@@ -380,12 +342,7 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
 
 statement :: proc(using parser: ^Parser) -> ^Stmt
 {
-    if match_token(parser, .Indent)
-    {
-        last_indent = previous_token(parser).value.(int)
-        return nil
-    }
-    else if match_token(parser, .Return)
+    if match_token(parser, .Return)
     {
         return return_stmt(parser)
     }
