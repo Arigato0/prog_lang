@@ -163,7 +163,7 @@ Parser :: struct
 
 free_expr :: proc(root: ^Expr)
 {
-    #partial switch v in root 
+    switch v in root 
     {
     case BinaryExpr:
         free_expr(v.left)
@@ -172,17 +172,66 @@ free_expr :: proc(root: ^Expr)
         free(v.right)
     case GroupingExpr:
         free_expr(v.inside)
+    case LiteralExpr:
+    case IdentifierExpr:
+    case PropertyAccessExpr:
+    case CallExpr:
+        free_all_expr(v.arguments)
+    case SubScriptExpr:
+        free_expr(v.value)
     }
 
     free(root)
 }
 
+free_all_expr :: proc(exprs: [dynamic]^Expr)
+{
+    for expr in exprs 
+    {
+        free_expr(expr)
+    }
+
+    delete(exprs)
+}
+
 free_a_stmt :: proc(root: ^Stmt)
 {
-    #partial switch v in root 
+    switch v in root 
     {
-    
+    case VarDeclStmt:
+        free_expr(v.init_value)
+    case IfStmt:
+        free_expr(v.condition)
+        free_block(v.branch)
+    case ExpressionStmt:
+        free_expr(v.expr)
+    case FnDecleration:
+        free_all_expr(v.args)
+        free_block(v.body)
+    case ReturnStmt:
+        free_all_expr(v.values)
+    case ForStmt:
+        free_expr(v.condition)
+        free_expr(v.initializer)
+        free_expr(v.update)
+        free_block(v.body)
+    case ForInStmt:
+        free_expr(v.range)
+        free_block(v.body)
+    case WhileStmt:
+        free_expr(v.condition)
+    case StructDecleration:
+        free_block(v.methods)
+    case BlockStmt:
     }
+
+    free(root)
+}
+
+free_block :: proc(block: BlockStmt)
+{
+    free_all_stmt(block.statments[:])
+    // delete(block.statments)
 }
 
 free_all_stmt :: proc(stmts: []^Stmt)
