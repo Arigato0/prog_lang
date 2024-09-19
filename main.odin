@@ -107,10 +107,6 @@ print_expr :: proc(root: ^parsing.Expr)
         print_expr(v.inside)
     case parsing.IdentifierExpr:
         fmt.print(lexing.get_token_string(v.name))
-    case parsing.VarPair:
-        fmt.printf("({} {} ", lexing.get_token_string(v.name), lexing.get_token_string(v.operator))
-        print_expr(v.value)
-        fmt.println(")")
     case parsing.CallExpr:
         fmt.printf("(call {} (", lexing.get_token_string(v.name))
         for expr in v.arguments
@@ -122,6 +118,8 @@ print_expr :: proc(root: ^parsing.Expr)
         fmt.printf("(subscript {} [", lexing.get_token_string(v.identifier))
         print_expr(v.value)
         fmt.println("])")
+    case parsing.PropertyAccessExpr:
+        fmt.printf("{}.{}", lexing.get_token_string(v.object), lexing.get_token_string(v.property))
     }
 
     fmt.print(" ")
@@ -160,9 +158,9 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
 {
     #partial switch v in stmt 
     {
-    case parsing.VarPair:
+    case parsing.VarDeclStmt:
         fmt.printf("({} := ", lexing.get_token_string(v.name))
-        print_expr(v.value)
+        print_expr(v.init_value)
         fmt.println(")")
     case parsing.ExpressionStmt:
         print_expr(v.expr)

@@ -15,11 +15,11 @@ expression_stmt :: proc(using parser: ^Parser) -> ^Stmt
     return stmt
 }
 
-var_pair :: proc(using parser: ^Parser) -> ^Stmt 
+var_decl_stmt :: proc(using parser: ^Parser) -> ^Stmt 
 {
     identifier := previous_token(parser)
 
-    if !match_token(parser, .ColonEqual, .Equal, .PlusEqual, .MinusEqual, .ForwardSlashEqual, .MinusEqual)
+    if !match_token(parser, .ColonEqual)
     {
         rollback(parser)
         return expression_stmt(parser)
@@ -27,25 +27,12 @@ var_pair :: proc(using parser: ^Parser) -> ^Stmt
 
     var_decl := new(Stmt)
 
-    type := previous_token(parser).type
 
-    pair := VarPair {
+    var_decl^ = VarDeclStmt {
         name = identifier,
-        operator = previous_token(parser),
-        value = expression(parser)
+        init_value = expression(parser)
     }
     
-    if type == .ColonEqual 
-    {
-        var_decl^ = pair
-    }
-    else 
-    {
-        expr := new(Expr)
-        expr^ = pair
-        var_decl^ = ExpressionStmt { expr }
-    }
-
     return var_decl
 }
 
@@ -163,7 +150,7 @@ decleration :: proc(using parser: ^Parser) -> ^Stmt
 {
     if match_token(parser, .Identifier)
     {
-        return var_pair(parser)
+        return var_decl_stmt(parser)
     }
     else if match_token(parser, .Fn)
     {

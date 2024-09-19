@@ -39,7 +39,6 @@ current_token :: proc(using parser: ^Parser) -> ^lexing.Token
     return &tokens[token_offset]
 }
 
-
 advance :: proc(using parser: ^Parser) 
 {
     if token_offset >= len(tokens) do return

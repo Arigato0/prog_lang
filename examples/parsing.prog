@@ -7,6 +7,7 @@ struct User implements IUser:
     fn login(username, password):
         _handle_login(username, passowrd)
 
+result.x += 10
 
 my_user := User()
 my_user.name = "john"

@@ -93,6 +93,17 @@ primary :: proc(using parser: ^Parser) -> ^Expr
                 value = value
             }
         }
+        else if match_token(parser, .Dot)
+        {
+            ok := expect_token(parser, "exepcted identifier to access a property of an object", .Identifier)
+
+            if !ok do return nil   
+
+            expr^ = PropertyAccessExpr {
+                object = identifier,
+                property = previous_token(parser)
+            }
+        }
         else 
         {
             expr^ = IdentifierExpr{identifier}
@@ -172,7 +183,12 @@ numeric_range :: proc(using parser: ^Parser) -> ^Expr
     return binary_rule(parser, equality, .DotDot, .DotEqual)
 }
 
+assignment_expr :: proc(using parser: ^Parser) -> ^Expr 
+{
+    return binary_rule(parser, numeric_range, .Equal, .PlusEqual, .MinusEqual, .ForwardSlashEqual, .MinusEqual)
+}
+
 expression :: proc(using parser: ^Parser) -> ^Expr 
 {
-    return numeric_range(parser)
+    return assignment_expr(parser)
 }

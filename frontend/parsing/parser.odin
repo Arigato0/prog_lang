@@ -52,12 +52,10 @@ IdentifierExpr :: struct
     name: ^lexing.Token
 }
 
-// as a statement its a variable decleration but as an expression it is assignment
-VarPair :: struct 
+PropertyAccessExpr :: struct 
 {
-    name: ^lexing.Token,
-    operator: ^lexing.Token,
-    value: ^Expr
+    object: ^lexing.Token,
+    property: ^lexing.Token,
 }
 
 Expr :: union 
@@ -67,9 +65,9 @@ Expr :: union
     GroupingExpr,
     LiteralExpr,
     IdentifierExpr,
-    VarPair,
     CallExpr,
     SubScriptExpr,
+    PropertyAccessExpr,
 }
 
 // for when expected a statement but an expression was also acceptable
@@ -134,9 +132,15 @@ WhileStmt :: struct
     body: BlockStmt,
 }
 
+VarDeclStmt :: struct 
+{
+    name: ^lexing.Token,
+    init_value: ^Expr,
+}
+
 Stmt :: union 
 {
-    VarPair,
+    VarDeclStmt,
     IfStmt,
     BlockStmt,
     ExpressionStmt,
@@ -168,8 +172,6 @@ free_expr :: proc(root: ^Expr)
         free(v.right)
     case GroupingExpr:
         free_expr(v.inside)
-    case VarPair:
-        free_expr(v.value)
     }
 
     free(root)
@@ -179,9 +181,7 @@ free_a_stmt :: proc(root: ^Stmt)
 {
     #partial switch v in root 
     {
-    case VarPair:
-        free_expr(v.value)
-        free(root)
+    
     }
 }
 
@@ -201,15 +201,15 @@ parse_tokens :: proc(tokens: []lexing.Token) -> Parser
 {
     parser := Parser { tokens = tokens }
 
-    // parser.root = expression(&parser)
-
     for _, had_err := parser.error.?; !had_err && !match_token(&parser, .Eof);
     {
         stmt := decleration(&parser)
+        
         if stmt == nil 
         {
             break
         }
+
         append(&parser.statements, stmt)
     }
 
