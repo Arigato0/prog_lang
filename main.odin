@@ -31,8 +31,6 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
         "return" = .Return,
         "pass" = .Pass,
         "in" = .In,
-        "ctor" = .Ctor,
-        "dtor" = .Dtor,
         "implements" = .Implements,
         "interface" = .Interface,
     }

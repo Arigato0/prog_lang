@@ -2,6 +2,7 @@
 package parsing 
 
 import "core:fmt"
+import "core:strings"
 import "../lexing"
 
 EMPTY_BLOCK :: BlockStmt { statments = nil }
@@ -319,6 +320,22 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
     decl.methods = block_stmt(parser, .Fn)
 
     if decl.methods.statments == nil do return nil
+
+    for stmt in decl.methods.statments
+    {
+        #partial switch v in stmt^ 
+        {
+        case FnDecleration:
+            if transmute(string)v.name.value.([]byte) == "ctor"
+            {
+                decl.ctor = stmt
+            }
+            else if transmute(string)v.name.value.([]byte) == "dtor"
+            {
+                decl.dtor = stmt
+            }
+        }
+    }
 
     stmt := new(Stmt)
 

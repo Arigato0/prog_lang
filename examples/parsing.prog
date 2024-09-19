@@ -1,6 +1,8 @@
 
 struct User implements IUser:
     
+    fn ctor(username):
+        this.username = username
     fn greet():
         println("hello user")
 
@@ -9,5 +11,6 @@ struct User implements IUser:
 
 result.x += 10
 
-my_user := User()
+my_user := User("alex")
+
 my_user.name = "john"
