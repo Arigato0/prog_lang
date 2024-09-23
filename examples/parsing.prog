@@ -1,4 +1,3 @@
-
 struct User implements IUser:
     
     fn ctor(username):

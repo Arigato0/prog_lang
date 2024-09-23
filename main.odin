@@ -280,7 +280,7 @@ main :: proc()
 
     parser := parsing.parse_tokens(tokens[:])
 
-    defer parsing.free_stmt(parser.statements[:])
+    defer parsing.free_parser(&parser)
 
     if err, had_err := parser.error.?; had_err
     {

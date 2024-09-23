@@ -94,6 +94,21 @@ block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> 
     return block
 }
 
+add_decl :: proc(using parser: ^Parser, token: ^lexing.Token) -> bool
+{
+    id_string := transmute(string)token.value.([]byte)
+
+    if _, id_exists := decl_table[id_string]; id_exists
+    {
+        set_error(parser, "identifier already previously declared")
+        return false
+    }
+
+    decl_table[id_string] = .Fn
+
+    return true
+}
+
 fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
 {
     ok := expect_token(parser, "expected an identifier", .Identifier)
@@ -101,6 +116,13 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
     if !ok do return nil
    
     identifier := previous_token(parser)
+    
+    ok = add_decl(parser, identifier) 
+
+    if !ok 
+    {
+        return nil
+    }
 
     ok = expect_token(parser, "expected a '('", .LeftParen)
 
@@ -307,6 +329,13 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
     if !ok do return nil
 
     decl.name = previous_token(parser)
+
+    ok = add_decl(parser, decl.name) 
+
+    if !ok 
+    {
+        return nil
+    }
 
     if match_token(parser, .Implements)
     {

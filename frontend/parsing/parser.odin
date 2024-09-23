@@ -3,7 +3,6 @@ package parsing
 import "../lexing"
 import "core:fmt"
 
-
 Error :: struct 
 {
     message: string,
@@ -157,6 +156,7 @@ Parser :: struct
     token_offset: int,
     tokens: []lexing.Token,
     last_indent: int,
+    decl_table: map[string]lexing.TokenType,
     statements: [dynamic]^Stmt,
     error: Maybe(Error)
 }
@@ -231,7 +231,6 @@ free_a_stmt :: proc(root: ^Stmt)
 free_block :: proc(block: BlockStmt)
 {
     free_all_stmt(block.statments[:])
-    // delete(block.statments)
 }
 
 free_all_stmt :: proc(stmts: []^Stmt)
@@ -245,6 +244,12 @@ free_all_stmt :: proc(stmts: []^Stmt)
 }
 
 free_stmt :: proc{free_a_stmt, free_all_stmt}
+
+free_parser :: proc(using parser: ^Parser)
+{
+    free_all_stmt(statements[:])
+    delete(decl_table)
+}
 
 parse_tokens :: proc(tokens: []lexing.Token) -> Parser 
 {
