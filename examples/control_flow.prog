@@ -1,8 +1,11 @@
+
 n := input("Enter number:")
 
 n_str := match n:
     5: "five"
     2: "two"
+    9 or 20: "either nine or twenty"
     _: "some other number"
 
 println(n_str)
+

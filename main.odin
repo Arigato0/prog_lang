@@ -34,6 +34,9 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
         "implements" = .Implements,
         "interface" = .Interface,
         "match" = .Match,
+        "or" = .Or,
+        "and" = .And,
+        "not" = .Not,
     }
 
     defer delete(lexer.keywords)

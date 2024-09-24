@@ -171,7 +171,7 @@ primary :: proc(using parser: ^Parser) -> ^Expr
 
 unary :: proc(using parser: ^Parser) -> ^Expr 
 {
-    if match_token(parser, .Bang, .Minus) 
+    if match_token(parser, .Bang, .Minus, .Not) 
     {
         operator := previous_token(parser)
         expr := unary(parser) 
@@ -223,7 +223,12 @@ assignment_expr :: proc(using parser: ^Parser) -> ^Expr
     return binary_rule(parser, numeric_range, .Equal, .PlusEqual, .MinusEqual, .ForwardSlashEqual, .MinusEqual)
 }
 
+and_or_expr :: proc(using parser: ^Parser) -> ^Expr 
+{
+    return binary_rule(parser, assignment_expr, .And, .Or)
+}
+
 expression :: proc(using parser: ^Parser) -> ^Expr 
 {
-    return assignment_expr(parser)
+    return and_or_expr(parser)
 }
