@@ -2,6 +2,7 @@
 package parsing
 
 import "../lexing"
+import "../../util"
 import "core:fmt"
 
 Rule :: proc(^Parser) -> ^Expr
@@ -29,85 +30,122 @@ binary_rule :: #force_inline proc(using parser: ^Parser, rule: Rule, types: ..le
     return expr
 }
 
+match_expr :: proc(using parser: ^Parser) -> ^Expr 
+{
+    expr := MatchExpr {}
+
+    expr.value = expression(parser)
+
+    if expr.value == nil do return nil
+
+    expr.cases = block_stmt(parser, proc(using parser: ^Parser) -> ^Stmt
+    {
+        match_case := MatchCase {}
+
+        match_case.value = expression(parser)
+
+        if match_case.value == nil do return nil 
+
+        if check_next_token(parser, .Indent)
+        {
+            match_case.body = block_stmt(parser)
+
+            if match_case.body.statments == nil do return nil
+        }
+        else 
+        {
+            ok := expect_token(parser, "expected a colon after match case value", .Colon)
+            
+            if !ok do return nil 
+
+            append(&match_case.body.statments, make_stmt(expression(parser)))
+        }
+
+        return make_stmt(match_case)
+    })
+
+    if expr.cases.statments == nil do return nil
+
+    return make_expr(expr)
+}
+
+identifier_expr :: proc(using parser: ^Parser) -> ^Expr 
+{
+    identifier := previous_token(parser)
+
+    if match_token(parser, .LeftParen)
+    {
+        call_expr := CallExpr { name = identifier }
+
+        for !check_token(parser, .RightParen) && !at_end(parser)
+        {
+            // TODO: add support for var pairs so named arguments can work here
+            append(&call_expr.arguments, expression(parser))
+
+            if !match_token(parser, .Comma)
+            {
+                break
+            }
+        }
+
+        ok := expect_token(parser, "expected a right parenthesis to match left one", .RightParen)
+
+        if !ok do return nil
+
+        return make_expr(call_expr)
+    }
+    else if match_token(parser, .LeftBrack)
+    {
+        value := expression(parser) 
+
+        // TODO: implement parsing slicing
+        if value == nil do return nil
+
+        ok := expect_token(parser, "exepcted matching bracket to close off subscript operation", .RightBrack)
+
+        if !ok do return nil
+
+        return make_expr(SubScriptExpr {
+            identifier = identifier,
+            value = value
+        })
+    }
+    else if match_token(parser, .Dot)
+    {
+        ok := expect_token(parser, "exepcted identifier to access a property of an object", .Identifier)
+
+        if !ok do return nil   
+
+        return make_expr(PropertyAccessExpr {
+            object = identifier,
+            property = previous_token(parser)
+        })
+    }
+    else 
+    {
+        return make_expr(IdentifierExpr{identifier})
+    }
+}
+
 primary :: proc(using parser: ^Parser) -> ^Expr 
 {
-    expr := new(Expr)
-
-    defer if _, had_err := error.?; had_err
-    {
-        free(expr)
-    }
 
     if match_token(parser, .True)
     {
-        expr^ = LiteralExpr{true}
+        return make_expr(LiteralExpr{true})
     }
     else if match_token(parser, .False)
     {
-        expr^ = LiteralExpr{false}
+        return make_expr(LiteralExpr{false})
     }
     else if match_token(parser, .Int, .Float, .String)
     {
         previous := previous_token(parser)
-        expr^ = LiteralExpr{previous}
+        return make_expr(LiteralExpr{previous})
     }
     else if match_token(parser, .Identifier)
     {
-        identifier := previous_token(parser)
-
-        if match_token(parser, .LeftParen)
-        {
-            call_expr := CallExpr { name = identifier }
-
-            for !check_token(parser, .RightParen) && !at_end(parser)
-            {
-                // TODO: add support for var pairs so named arguments can work here
-                append(&call_expr.arguments, expression(parser))
-
-                if !match_token(parser, .Comma)
-                {
-                    break
-                }
-            }
-            
-
-            ok := expect_token(parser, "expected a right parenthesis to match left one", .RightParen)
-
-            if !ok do return nil
-
-            expr^ = call_expr
-        }
-        else if match_token(parser, .LeftBrack)
-        {
-            value := expression(parser) 
-
-            // TODO: implement parsing slicing
-            if value == nil do return nil
-
-            ok := expect_token(parser, "exepcted matching bracket to close off subscript operation", .RightBrack)
-
-            if !ok do return nil
-
-            expr^ = SubScriptExpr {
-                identifier = identifier,
-                value = value
-            }
-        }
-        else if match_token(parser, .Dot)
-        {
-            ok := expect_token(parser, "exepcted identifier to access a property of an object", .Identifier)
-
-            if !ok do return nil   
-
-            expr^ = PropertyAccessExpr {
-                object = identifier,
-                property = previous_token(parser)
-            }
-        }
-        else 
-        {
-            expr^ = IdentifierExpr{identifier}
-        }
+        return identifier_expr(parser)
     }
     else if match_token(parser, .LeftParen)
     {
@@ -120,18 +158,15 @@ primary :: proc(using parser: ^Parser) -> ^Expr
             return nil
         }
 
-        expr^ = GroupingExpr {
+        return make_expr(GroupingExpr {
             inside = inside
-        }
-
+        })
     }
     else 
     {
         set_error(parser, "expected value")
-        expr = nil
+        return nil
     }
-
-    return expr
 }
 
 unary :: proc(using parser: ^Parser) -> ^Expr 

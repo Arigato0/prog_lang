@@ -12,7 +12,7 @@ run:
 	odin run .
 
 build:
-	odin build .
+	odin build . $(DEBUG_FLAGS)
 
 release:
 	odin build . $(RELEASE_FLAGS)

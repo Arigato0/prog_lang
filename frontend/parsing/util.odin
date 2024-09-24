@@ -2,6 +2,7 @@
 package parsing 
 
 import "../lexing"
+import "../../util"
 
 at_end :: proc(using parser: ^Parser) -> bool
 {
@@ -25,6 +26,11 @@ check_previous_token :: proc(using parser: ^Parser, type: lexing.TokenType) -> b
     return previous_token(parser).type == type
 }
 
+check_next_token :: proc(using parser: ^Parser, type: lexing.TokenType) -> bool 
+{
+    return next_token(parser).type == type
+}
+
 previous_token :: proc(using parser: ^Parser) -> ^lexing.Token
 {
     if token_offset - 1 < 0 do return &tokens[0]
@@ -37,6 +43,13 @@ current_token :: proc(using parser: ^Parser) -> ^lexing.Token
     if at_end(parser) do return nil
 
     return &tokens[token_offset]
+}
+
+next_token :: proc(using parser: ^Parser) -> ^lexing.Token
+{
+    if token_offset+1 >= len(tokens) do return nil
+
+    return &tokens[token_offset+1]
 }
 
 advance :: proc(using parser: ^Parser) 
@@ -96,4 +109,14 @@ expect_token :: proc(using parser: ^Parser, message: string, types: ..lexing.Tok
 rollback :: proc(using parser: ^Parser)
 {
     token_offset -= 1
+}
+
+make_expr :: #force_inline proc(expr: Expr) -> ^Expr 
+{
+    return util.construct(Expr, expr)
+}
+
+make_stmt :: #force_inline proc(stmt: Stmt) -> ^Stmt 
+{
+    return util.construct(Stmt, stmt)
 }

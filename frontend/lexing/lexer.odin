@@ -14,7 +14,7 @@ TokenType :: enum
     LeftParen, RightParen, LeftBrace, RightBrace, LeftBrack, RightBrack,
     Dot, DotDot, DotEqual, Comma, Arrow, Bang, ColonEqual, Colon, ColonColon,
     True, False, Nil, Return, Pass,
-    Struct, Implements, Interface, Fn, For, While, If, Else, In,
+    Struct, Implements, Interface, Fn, For, While, If, Else, In, Match,
     Eof,
 }
 

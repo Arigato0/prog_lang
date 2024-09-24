@@ -1,4 +1,3 @@
-
 n := input("Enter number:")
 
 n_str := match n:
@@ -7,4 +6,3 @@ n_str := match n:
     _: "some other number"
 
 println(n_str)
-

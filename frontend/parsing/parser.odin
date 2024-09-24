@@ -57,6 +57,18 @@ PropertyAccessExpr :: struct
     property: ^lexing.Token,
 }
 
+MatchCase :: struct 
+{
+    value: ^Expr,
+    body: BlockStmt
+}
+
+MatchExpr :: struct 
+{
+    value: ^Expr,
+    cases: BlockStmt,
+}
+
 Expr :: union 
 {
     BinaryExpr,
@@ -67,12 +79,7 @@ Expr :: union
     CallExpr,
     SubScriptExpr,
     PropertyAccessExpr,
-}
-
-// for when expected a statement but an expression was also acceptable
-ExpressionStmt :: struct 
-{
-    expr: ^Expr
+    MatchExpr,
 }
 
 BlockStmt :: struct 
@@ -139,16 +146,18 @@ VarDeclStmt :: struct
 
 Stmt :: union 
 {
+    ^Expr,
     VarDeclStmt,
     IfStmt,
     BlockStmt,
-    ExpressionStmt,
     FnDecleration,
     ReturnStmt,
     ForStmt,
     ForInStmt,
     WhileStmt,
     StructDecleration,
+    // only used for pattern matching
+    MatchCase,
 }
 
 Parser :: struct 
@@ -179,6 +188,9 @@ free_expr :: proc(root: ^Expr)
         free_all_expr(v.arguments)
     case SubScriptExpr:
         free_expr(v.value)
+    case MatchExpr:
+        free(v.value)
+        free_block(v.cases)
     }
 
     free(root)
@@ -203,8 +215,8 @@ free_a_stmt :: proc(root: ^Stmt)
     case IfStmt:
         free_expr(v.condition)
         free_block(v.branch)
-    case ExpressionStmt:
-        free_expr(v.expr)
+    case ^Expr:
+        free_expr(v)
     case FnDecleration:
         free_all_expr(v.args)
         free_block(v.body)
@@ -223,6 +235,9 @@ free_a_stmt :: proc(root: ^Stmt)
     case StructDecleration:
         free_block(v.methods)
     case BlockStmt:
+    case MatchCase:
+        free_expr(v.value)
+        free_block(v.body)
     }
 
     free(root)

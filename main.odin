@@ -33,6 +33,7 @@ build_tokens :: proc(source: []byte) -> (out: [dynamic]lexing.Token)
         "in" = .In,
         "implements" = .Implements,
         "interface" = .Interface,
+        "match" = .Match,
     }
 
     defer delete(lexer.keywords)
@@ -118,6 +119,14 @@ print_expr :: proc(root: ^parsing.Expr)
         fmt.println("])")
     case parsing.PropertyAccessExpr:
         fmt.printf("{}.{}", lexing.get_token_string(v.object), lexing.get_token_string(v.property))
+    case parsing.MatchExpr:
+        fmt.println("(match ")
+        print_expr(v.value)
+        fmt.println()
+        for stmt in v.cases.statments
+        {
+            print_stmt(stmt)
+        }
     }
 
     fmt.print(" ")
@@ -160,8 +169,8 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
         fmt.printf("({} := ", lexing.get_token_string(v.name))
         print_expr(v.init_value)
         fmt.println(")")
-    case parsing.ExpressionStmt:
-        print_expr(v.expr)
+    case ^parsing.Expr:
+        print_expr(v)
     case parsing.FnDecleration:
         fmt.printf("(fn {} (", lexing.get_token_string(v.name))
         for expr, i in v.args
@@ -244,8 +253,18 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
             print_stmt(stmt)
         }
         fmt.println(")")
+    case parsing.MatchCase:
+        fmt.print("case ")
+        print_expr(v.value)
+        fmt.printf(" => ")
+        for stmt in v.body.statments
+        {
+            print_stmt(stmt)
+        }
+        fmt.println()
     }
 }
+
 
 main :: proc() 
 {

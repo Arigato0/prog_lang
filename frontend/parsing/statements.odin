@@ -7,14 +7,6 @@ import "../lexing"
 
 EMPTY_BLOCK :: BlockStmt { statments = nil }
 
-expression_stmt :: proc(using parser: ^Parser) -> ^Stmt 
-{
-    stmt := new(Stmt)
-    stmt^ = ExpressionStmt {
-        expr = expression(parser)
-    }
-    return stmt
-}
 
 var_decl_stmt :: proc(using parser: ^Parser) -> ^Stmt 
 {
@@ -23,21 +15,29 @@ var_decl_stmt :: proc(using parser: ^Parser) -> ^Stmt
     if !match_token(parser, .ColonEqual)
     {
         rollback(parser)
-        return expression_stmt(parser)
+        return make_stmt(expression(parser))
     }
 
-    var_decl := new(Stmt)
+    init_value: ^Expr
 
-
-    var_decl^ = VarDeclStmt {
-        name = identifier,
+    if match_token(parser, .Match)
+    {
+        init_value = match_expr(parser)
+    }
+    else 
+    {
         init_value = expression(parser)
     }
-    
-    return var_decl
+
+    return make_stmt(VarDeclStmt {
+        identifier,
+        init_value
+    })
 }
 
-block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> (BlockStmt) 
+BlockCallback :: proc(parser: ^Parser) -> ^Stmt
+
+block_stmt :: proc(using parser: ^Parser, block_callback := decleration, allowed_types: ..lexing.TokenType) -> (BlockStmt) 
 {
     ok := expect_token(parser, "expected a colon at to begin block", .Colon)
 
@@ -58,7 +58,7 @@ block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> 
 
     start_indent := current_token(parser).value.(int)
     last_indent = start_indent
-    
+
     for !at_end(parser) && last_indent == start_indent
     {
         if match_token(parser, .Indent)
@@ -81,7 +81,7 @@ block_stmt :: proc(using parser: ^Parser, allowed_types: ..lexing.TokenType) -> 
             return EMPTY_BLOCK
         }
 
-        stmt := decleration(parser)
+        stmt := block_callback(parser)
 
         if stmt == nil 
         {
@@ -146,7 +146,7 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
 
     if match_token(parser, .Arrow)
     {
-        expr := expression_stmt(parser)
+        expr := make_stmt(expression(parser))
 
         append(&fn.body.statments, expr)
     }
@@ -162,11 +162,7 @@ fn_decleration :: proc(using parser: ^Parser) -> ^Stmt
         return nil
     }
 
-    stmt := new(Stmt)
-
-    stmt^ = fn
-
-    return stmt
+    return make_stmt(fn)
 }
 
 decleration :: proc(using parser: ^Parser) -> ^Stmt
@@ -204,9 +200,7 @@ return_stmt :: proc(using parser: ^Parser) -> ^Stmt
         } 
     }
 
-    stmt^ = return_stmt
-
-    return stmt
+    return make_stmt(return_stmt)
 }
 
 if_stmt :: proc(using parser: ^Parser) -> ^Stmt 
@@ -219,15 +213,11 @@ if_stmt :: proc(using parser: ^Parser) -> ^Stmt
 
     if block.statments == nil do return nil 
 
-    stmt := new(Stmt)
-
-    stmt^ = IfStmt {
+    return make_stmt(IfStmt {
         is_elif = is_elif,
         condition = condition,
         branch = block
-    }
-
-    return stmt
+    })
 }
 
 else_stmt :: proc(using parser: ^Parser) -> ^Stmt 
@@ -236,14 +226,10 @@ else_stmt :: proc(using parser: ^Parser) -> ^Stmt
 
     if block.statments == nil do return nil 
 
-    stmt := new(Stmt)
-
-    stmt^ = IfStmt {
+    return make_stmt(IfStmt {
         condition = nil,
         branch = block
-    }
-
-    return stmt
+    })
 }
 
 for_range_stmt :: proc(using parser: ^Parser, element1, element2: ^lexing.Token) -> ^Stmt
@@ -261,11 +247,7 @@ for_range_stmt :: proc(using parser: ^Parser, element1, element2: ^lexing.Token)
 
     for_range.body = block
 
-    stmt := new(Stmt)
-
-    stmt^ = for_range
-
-    return stmt
+    return make_stmt(for_range)
 }
 
 for_stmt :: proc(using parser: ^Parser) -> ^Stmt 
@@ -305,19 +287,15 @@ while_stmt :: proc(using parser: ^Parser) -> ^Stmt
         return nil
     }
 
-    wstmt := WhileStmt { condition = expr }
+    stmt := WhileStmt { condition = expr }
 
     block := block_stmt(parser) 
 
     if block.statments == nil do return nil 
 
-    wstmt.body = block
+    stmt.body = block
 
-    stmt := new(Stmt)
-
-    stmt^ = wstmt
-
-    return stmt
+    return make_stmt(stmt)
 }
 
 struct_decl :: proc(using parser: ^Parser) -> ^Stmt 
@@ -346,7 +324,7 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
         decl.interface = previous_token(parser)
     }
 
-    decl.methods = block_stmt(parser, .Fn)
+    decl.methods = block_stmt(parser, decleration, .Fn)
 
     if decl.methods.statments == nil do return nil
 
@@ -366,11 +344,7 @@ struct_decl :: proc(using parser: ^Parser) -> ^Stmt
         }
     }
 
-    stmt := new(Stmt)
-
-    stmt^ = decl
-
-    return stmt
+    return make_stmt(decl)
 }
 
 statement :: proc(using parser: ^Parser) -> ^Stmt
@@ -405,6 +379,6 @@ statement :: proc(using parser: ^Parser) -> ^Stmt
     }
     else 
     {
-        return expression_stmt(parser)
+        return make_stmt(expression(parser))
     }
 }
