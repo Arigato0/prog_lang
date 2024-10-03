@@ -1,6 +1,7 @@
 package lexing
 
 import "core:unicode"
+import "core:fmt"
 
 TokenType :: enum 
 {
@@ -128,5 +129,53 @@ advance_token :: proc(lexer: ^Lexer) -> Token
     }
 
     return make_error(lexer, "unknown character found")
+}
+
+build_tokens :: proc(source: []byte) -> (out: [dynamic]Token)
+{
+    lexer := create(source)
+
+    lexer.keywords = 
+    { 
+        "struct" = .Struct,
+        "fn" = .Fn,
+        "for" = .For,
+        "while" = .While,
+        "if" = .If,
+        "else" = .Else,
+        "nil" = .Nil,
+        "true" = .True,
+        "false" = .False,
+        "return" = .Return,
+        "pass" = .Pass,
+        "in" = .In,
+        "implements" = .Implements,
+        "interface" = .Interface,
+        "match" = .Match,
+        "or" = .Or,
+        "and" = .And,
+        "not" = .Not,
+    }
+
+    defer delete(lexer.keywords)
+
+    for true 
+    {
+        token := advance_token(&lexer)
+
+        if token.type == .Error {
+            fmt.printfln("error while lexing ({}:{}): {}", token.line, token.column, get_token_string(&token))
+            return nil
+        }
+
+        append(&out, token)
+
+        if token.type == .Eof 
+        {
+            break
+        }
+    }
+
+    return out
 }
 
