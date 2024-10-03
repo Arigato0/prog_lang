@@ -129,7 +129,6 @@ identifier_expr :: proc(using parser: ^Parser) -> ^Expr
 
 primary :: proc(using parser: ^Parser) -> ^Expr 
 {
-
     if match_token(parser, .True)
     {
         return make_expr(LiteralExpr{true})
@@ -142,6 +141,10 @@ primary :: proc(using parser: ^Parser) -> ^Expr
     {
         previous := previous_token(parser)
         return make_expr(LiteralExpr{previous})
+    }
+    else if check_token(parser, .Equal, .PlusEqual, .MinusEqual, .ForwardSlashEqual, .MinusEqual)
+    {
+        return match_expr(parser)
     }
     else if match_token(parser, .Identifier)
     {

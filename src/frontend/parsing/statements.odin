@@ -377,6 +377,10 @@ statement :: proc(using parser: ^Parser) -> ^Stmt
     {
         return struct_decl(parser)
     }
+    else if match_token(parser, .Match)
+    {
+        return make_stmt(match_expr(parser))
+    }
     else 
     {
         return make_stmt(expression(parser))
