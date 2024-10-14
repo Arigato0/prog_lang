@@ -4,6 +4,7 @@ import "frontend/lexing"
 import "frontend/parsing"
 import "backend/compiling"
 import "debugging"
+import "debugging/decompiling"
 
 import "core:fmt"
 import "core:os"
@@ -15,6 +16,7 @@ import "base:runtime"
 PRINT_TOKENS :: #config(DEBUG_TOKENS, false)
 PRINT_AST :: #config(DEBUG_AST, false)
 TRACK_ALLOCS :: #config(DEBUG_MEMORY, false)
+PRINT_BYTE_CODE :: #config(DEBUG_BYTE_CODE, false)
 
 main :: proc() 
 {
@@ -30,7 +32,7 @@ main :: proc()
     }
 
     // TODO: take the source filepath from system args
-    contents, ok := os.read_entire_file("./examples/parsing.prog")
+    contents, ok := os.read_entire_file("./examples/compiling.prog")
 
     defer delete(contents)
 
@@ -65,4 +67,9 @@ main :: proc()
     }
 
     compiler := compiling.compile(&parser)
+
+    when PRINT_BYTE_CODE
+    {
+        decompiling.print_decompiliation(&compiler)
+    }
 }

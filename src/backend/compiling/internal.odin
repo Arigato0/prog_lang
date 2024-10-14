@@ -7,6 +7,7 @@ import "../../frontend/lexing"
 import "core:mem"
 import "core:strconv"
 import "base:intrinsics"
+import "core:fmt"
 
 emit_op :: proc(using compiler: ^Compiler, op: OpCode)
 {
@@ -50,7 +51,7 @@ compile_expr :: proc(using compiler: ^Compiler, expr: ^parsing.Expr)
     {
         case parsing.BinaryExpr:
             compile_expr(compiler, v.left)
-            compile_expr(compiler, v.left)
+            compile_expr(compiler, v.right)
 
             switch v.operator.value.([]byte)[0]
             {

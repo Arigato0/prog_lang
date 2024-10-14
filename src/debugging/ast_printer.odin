@@ -20,7 +20,7 @@ print_expr :: proc(root: ^parsing.Expr)
 {
     if root == nil do return 
     
-    #partial switch v in root 
+    switch v in root 
     {
     case parsing.BinaryExpr:
         fmt.printf("({} ", lexing.get_token_string(v.operator))
