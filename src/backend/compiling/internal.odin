@@ -3,6 +3,7 @@ package compiling
 
 import "../../frontend/parsing"
 import "../../frontend/lexing"
+import "../native"
 
 import "core:mem"
 import "core:strconv"
@@ -15,10 +16,9 @@ emit_op :: proc(using compiler: ^Compiler, op: OpCode)
 }
 
 emit_integral :: proc(using compiler: ^Compiler, value: $T)
-where intrinsics.type_is_numeric(T)
 {
-    value := value
-    bytes := mem.byte_slice(&value, size_of(T))
+    value: native.Value = value
+    bytes := mem.byte_slice(&value, size_of(value))
 
     for b in bytes 
     {

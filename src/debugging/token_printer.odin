@@ -6,6 +6,8 @@ import "core:fmt"
 
 print_tokens :: proc(tokens: [dynamic]lexing.Token)
 {
+    fmt.println("======== TOKENS =======")
+    
     for &token in tokens 
     {
         value: any = token.value
@@ -18,4 +20,6 @@ print_tokens :: proc(tokens: [dynamic]lexing.Token)
         fmt.printfln("{}({}, {}:{})", 
         token.type, value, token.line, token.column)
     }
+
+    fmt.println()
 }

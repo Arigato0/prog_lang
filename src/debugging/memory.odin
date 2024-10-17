@@ -5,6 +5,8 @@ import "core:mem"
 
 print_unfreed_memory :: proc(tracking_alloc: ^mem.Tracking_Allocator)
 {
+    fmt.println()
+    
     alloc_size := len(tracking_alloc.allocation_map)
 
     if alloc_size > 0

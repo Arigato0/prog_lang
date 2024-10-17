@@ -169,8 +169,12 @@ print_stmt :: proc(stmt: ^parsing.Stmt)
 
 print_ast :: proc(using parser: ^parsing.Parser)
 {
+    fmt.println("======== AST =======")
+
     for stmt in statements
     {
         print_stmt(stmt)
     }
+
+    fmt.println()
 }

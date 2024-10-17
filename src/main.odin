@@ -68,6 +68,8 @@ main :: proc()
 
     compiler := compiling.compile(&parser)
 
+    defer compiling.free_compiler(&compiler)
+
     when PRINT_BYTE_CODE
     {
         decompiling.print_decompiliation(&compiler)

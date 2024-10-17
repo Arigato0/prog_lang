@@ -4,6 +4,7 @@ import "../../backend/compiling"
 import "core:fmt"
 import "core:mem"
 import "core:bytes"
+import "../../backend/native"
 
 @(private="package")
 Decompiler :: struct 
@@ -21,19 +22,19 @@ read_op_code :: proc(using decompiler: ^Decompiler) -> compiling.OpCode
     return op
 }
 
-read_constant :: proc(using decompiler: ^Decompiler) -> int 
+read_value :: proc(using decompiler: ^Decompiler) -> (value: native.Value) 
 {
-    n := 0 
+    mem.copy(&value, bytes.ptr_from_bytes(compiler.code[cursor:]), size_of(native.Value))
 
-    mem.copy(&n, bytes.ptr_from_bytes(compiler.code[cursor:]), size_of(int))
+    cursor += size_of(native.Value)
 
-    cursor += size_of(int)
-
-    return n
+    return
 }
 
 print_decompiliation :: proc(using compiler: ^compiling.Compiler)
 {
+    fmt.println("======== CODE =======")
+
     decompiler := Decompiler {
         compiler = compiler
     }
@@ -49,8 +50,10 @@ print_decompiliation :: proc(using compiler: ^compiling.Compiler)
         #partial switch op 
         {
             case .Push: 
-                n := read_constant(&decompiler)
-                fmt.println(n)
+                n := read_value(&decompiler)
+                fmt.printfln("{}", n.(int))
         }
     }
+
+    fmt.println()
 }

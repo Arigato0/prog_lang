@@ -12,16 +12,14 @@ OpCode :: enum u8
     Sub,
 }
 
-Value :: union 
-{
-    int,
-    f32,
-    string
-}
-
 Compiler :: struct 
 {
     code: [dynamic]u8,
+}
+
+free_compiler :: proc(using compiler: ^Compiler)
+{
+    delete(code)
 }
 
 compile :: proc(using parser: ^parsing.Parser) -> (compiler: Compiler)
