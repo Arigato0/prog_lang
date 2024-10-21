@@ -9,48 +9,28 @@ import "../../backend/native"
 @(private="package")
 Decompiler :: struct 
 {
-    cursor: int,
+    reader: compiling.CodeReader,
     compiler: ^compiling.Compiler,
-}
-
-read_op_code :: proc(using decompiler: ^Decompiler) -> compiling.OpCode 
-{
-    op := cast(compiling.OpCode)compiler.code[cursor]
-
-    cursor += 1
-
-    return op
-}
-
-read_value :: proc(using decompiler: ^Decompiler) -> (value: native.Value) 
-{
-    mem.copy(&value, bytes.ptr_from_bytes(compiler.code[cursor:]), size_of(native.Value))
-
-    cursor += size_of(native.Value)
-
-    return
 }
 
 print_decompiliation :: proc(using compiler: ^compiling.Compiler)
 {
     fmt.println("======== CODE =======")
 
-    decompiler := Decompiler {
-        compiler = compiler
-    }
+    reader := compiling.CodeReader { compiler = compiler }
 
     fmt.println()
 
-    for decompiler.cursor < len(code)
+    for !compiling.reader_at_end(&reader)
     {
-        op := read_op_code(&decompiler)
+        op := compiling.read_op_code(&reader)
 
         fmt.print(op, " ")
 
         #partial switch op 
         {
             case .Push: 
-                n := read_value(&decompiler)
+                n := compiling.read_value(&reader)
                 fmt.printfln("{}", n.(int))
         }
     }

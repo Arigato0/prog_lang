@@ -12,9 +12,11 @@ OpCode :: enum u8
     Sub,
 }
 
+ByteCode :: [dynamic]u8
+
 Compiler :: struct 
 {
-    code: [dynamic]u8,
+    code: ByteCode,
 }
 
 free_compiler :: proc(using compiler: ^Compiler)

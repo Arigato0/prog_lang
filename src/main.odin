@@ -5,6 +5,7 @@ import "frontend/parsing"
 import "backend/compiling"
 import "debugging"
 import "debugging/decompiling"
+import "backend/exec"
 
 import "core:fmt"
 import "core:os"
@@ -73,5 +74,8 @@ main :: proc()
     when PRINT_BYTE_CODE
     {
         decompiling.print_decompiliation(&compiler)
+        fmt.println("=====================")
     }
+
+    exec.run_code(&compiler)
 }
